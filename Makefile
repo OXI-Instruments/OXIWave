@@ -2,7 +2,7 @@ VERSION = 1.1
 
 FLAGS = -Wall -Wextra -Wno-unused-parameter -g -Wno-unused -O3 -march=nocona -ffast-math \
 	-DVERSION=$(VERSION) -DPFFFT_SIMD_DISABLE \
-	-I. -Iext -Iext/imgui -Idep/include -Idep/include/SDL2
+	-I. -Iext -Iext/imgui -Idep/include -Idep/include/SDL2 -I/opt/X11/include 
 CFLAGS =
 CXXFLAGS = -std=c++11
 LDFLAGS =

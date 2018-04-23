@@ -6,7 +6,7 @@ import scipy.io.wavfile
 
 CATALOG_DIR = "catalog"
 SAMPLE_RATE = 44100
-NUM_SAMPLES = 256
+NUM_SAMPLES = 512
 t = np.linspace(0, 1, NUM_SAMPLES, False)
 
 def saveWAV16(filename, x):
@@ -103,7 +103,7 @@ def Noise():
 
 
 
-shepard = np.zeros(NUM_SAMPLES * 64)
-for i in range(128):
+#shepard = np.zeros(NUM_SAMPLES * 64)
+#for i in range(128):
 	
-saveWAV16("Shepard.wav", )
+#saveWAV16("Shepard.wav", )

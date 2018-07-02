@@ -98,17 +98,19 @@ static void getImageSize(ImTextureID id, int *width, int *height) {
 static void selectWave(int waveId) {
 	selectedId = waveId;
 	lastSelectedId = selectedId;
-	morphX = (float)(selectedId % BANK_GRID_WIDTH);
-	morphY = (float)(selectedId / BANK_GRID_WIDTH);
-	morphZ = (float)selectedId;
+	morphX = (float)(selectedId % BANK_GRID_DIM1);
+	morphY = (float)((selectedId / BANK_GRID_DIM2) % BANK_GRID_DIM2);
+	morphZ = (float)(selectedId / BANK_GRID_DIM3);
+	browse = (float)selectedId;
 }
 
 
 static void refreshMorphSnap() {
-	if (!morphInterpolate && morphZSpeed <= 0.f) {
+	if (!morphInterpolate && browseSpeed <= 0.f) {
 		morphX = roundf(morphX);
 		morphY = roundf(morphY);
 		morphZ = roundf(morphZ);
+		browse = roundf(browse);
 	}
 }
 
@@ -294,13 +296,17 @@ static void menuKeyCommands() {
 			if (ImGui::IsKeyPressed(SDLK_6))
 				currentPage = DB_PAGE;
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))
-				incrementSelectedId(currentPage == GRID_PAGE ? -BANK_GRID_WIDTH : -1);
+				incrementSelectedId(currentPage == GRID_PAGE ? -BANK_GRID_DIM1 : -1);
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))
-				incrementSelectedId(currentPage == GRID_PAGE ? BANK_GRID_WIDTH : 1);
+				incrementSelectedId(currentPage == GRID_PAGE ? BANK_GRID_DIM1 : 1);
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))
 				incrementSelectedId(-1);
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))
 				incrementSelectedId(1);
+			// if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEUP))
+			// 	incrementSelectedId(currentPage == GRID_PAGE ? -BANK_GRID_DIM1*BANK_GRID_DIM2 : -1);
+			// if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEDOWN))
+			// 	incrementSelectedId(currentPage == GRID_PAGE ? BANK_GRID_DIM1*BANK_GRID_DIM2 : -1);
 		}
 	}
 }
@@ -473,20 +479,22 @@ void renderPreview() {
 	if (playModeXY) {
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1.0);
-		float width = ImGui::CalcItemWidth() / 2.0 - ImGui::GetStyle().FramePadding.y;
+		float width = ImGui::CalcItemWidth() / 4.0 - ImGui::GetStyle().FramePadding.y;
 		ImGui::PushItemWidth(width);
-		ImGui::SliderFloat("##Morph X", &morphX, 0.0, BANK_GRID_WIDTH - 1, "Morph X: %.3f");
+		ImGui::SliderFloat("##Morph X", &morphX, 0.0, BANK_GRID_DIM1 - 1, "Morph X: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Morph Y", &morphY, 0.0, BANK_GRID_HEIGHT - 1, "Morph Y: %.3f");
+		ImGui::SliderFloat("##Morph Y", &morphY, 0.0, BANK_GRID_DIM2 - 1, "Morph Y: %.3f");
+		ImGui::SameLine();
+		ImGui::SliderFloat("##Morph Z", &morphZ, 0.0, BANK_GRID_DIM3 - 1, "Morph Z: %.3f");
 	}
 	else {
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1.0);
 		float width = ImGui::CalcItemWidth() / 2.0 - ImGui::GetStyle().FramePadding.y;
 		ImGui::PushItemWidth(width);
-		ImGui::SliderFloat("##Morph Z", &morphZ, 0.0, BANK_LEN - 1, "Morph Z: %.3f");
+		ImGui::SliderFloat("##Browse", &browse, 0.0, BANK_LEN - 1, "Browse: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Morph Z Speed", &morphZSpeed, 0.f, 10.f, "Morph Z Speed: %.3f Hz", 3.f);
+		ImGui::SliderFloat("##Browse Speed", &browseSpeed, 0.f, 10.f, "Browse Speed: %.3f Hz", 3.f);
 	}
 
 	refreshMorphSnap();
@@ -522,8 +530,9 @@ void editorPage() {
 	ImGui::BeginChild("Sidebar", ImVec2(200, 0), true);
 	{
 		float dummyZ = 0.0;
+		float dummyX = 0.0;
 		ImGui::PushItemWidth(-1);
-		renderBankGrid("SidebarGrid", BANK_LEN * 35.0, 1, &dummyZ, &morphZ);
+		renderBankGrid("SidebarGrid", BANK_LEN * 35.0, 1, &dummyZ, &browse);
 		refreshMorphSnap();
 	}
 	ImGui::EndChild();
@@ -733,7 +742,7 @@ void gridPage() {
 	ImGui::BeginChild("Grid Page", ImVec2(0, 0), true);
 	{
 		ImGui::PushItemWidth(-1.0);
-		renderBankGrid("WaveGrid", -1.f, BANK_GRID_WIDTH, &morphX, &morphY);
+		renderBankCube("WaveGrid", &morphX, &morphY, &morphZ);
 		refreshMorphSnap();
 	}
 	ImGui::EndChild();
@@ -749,7 +758,7 @@ void waterfallPage() {
 		static float angle = 1.0;
 		ImGui::SliderFloat("##angle", &angle, 0.0, 1.0, "Angle: %.3f");
 
-		renderWaterfall("##waterfall", -1.0, amplitude, angle, &morphZ);
+		renderWaterfall("##waterfall", -1.0, amplitude, angle, &browse);
 	}
 	ImGui::EndChild();
 }

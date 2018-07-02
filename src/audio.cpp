@@ -12,13 +12,15 @@ bool morphInterpolate = true;
 float morphX = 0.0;
 float morphY = 0.0;
 float morphZ = 0.0;
-float morphZSpeed = 0.0;
+float browse = 0.0;
+float browseSpeed = 0.0;
 int playIndex = 0;
 Bank *playingBank;
 
 static float morphXSmooth = morphX;
 static float morphYSmooth = morphY;
 static float morphZSmooth = morphZ;
+static float browseSmooth = browse;
 static SDL_AudioDeviceID audioDevice = 0;
 static SDL_AudioSpec audioSpec;
 static SRC_STATE *audioSrc = NULL;
@@ -31,39 +33,68 @@ long srcCallback(void *cb_data, float **data) {
 	for (int i = 0; i < inLen; i++) {
 		if (morphInterpolate) {
 			const float lambdaMorph = fminf(0.1 / playFrequency, 0.5);
-			morphXSmooth = crossf(morphXSmooth, clampf(morphX, 0.0, BANK_GRID_WIDTH - 1), lambdaMorph);
-			morphYSmooth = crossf(morphYSmooth, clampf(morphY, 0.0, BANK_GRID_HEIGHT - 1), lambdaMorph);
-			morphZSmooth = crossf(morphZSmooth, clampf(morphZ, 0.0, BANK_LEN - 1), lambdaMorph);
+			morphXSmooth = crossf(morphXSmooth, clampf(morphX, 0.0, BANK_GRID_DIM1 - 1), lambdaMorph);
+			morphYSmooth = crossf(morphYSmooth, clampf(morphY, 0.0, BANK_GRID_DIM2 - 1), lambdaMorph);
+			morphZSmooth = crossf(morphZSmooth, clampf(morphZ, 0.0, BANK_GRID_DIM3 - 1), lambdaMorph);
+			browseSmooth = crossf(browseSmooth, clampf(browse, 0.0, BANK_LEN - 1), lambdaMorph);
 		}
 		else {
 			// Snap X, Y, Z
 			morphXSmooth = roundf(morphX);
 			morphYSmooth = roundf(morphY);
 			morphZSmooth = roundf(morphZ);
+			browseSmooth = roundf(browse);
 		}
 
 		int index = (playIndex + i) % WAVE_LEN;
 		if (playModeXY) {
-			// Morph XY
+
+			// Morph XYZ
 			int xi = morphXSmooth;
 			float xf = morphXSmooth - xi;
+
 			int yi = morphYSmooth;
 			float yf = morphYSmooth - yi;
-			// 2D linear interpolate
+
+			int zi = morphZSmooth;
+			float zf = morphZSmooth - zi;
+
+			// 3D linear interpolate
+			int i_z0 = zi*BANK_GRID_DIM1*BANK_GRID_DIM2;
+			int i_z1 = eucmodi(zi + 1, BANK_GRID_DIM3);
+
+			int i_y0 = yi*BANK_GRID_DIM1;
+			int i_y1 = eucmodi(yi + 1, BANK_GRID_DIM2);
+
+			int i_x0 = xi;
+			int i_x1 = eucmodi(xi + 1, BANK_GRID_DIM1);
+
 			float v0 = crossf(
-				playingBank->waves[yi * BANK_GRID_WIDTH + xi].postSamples[index],
-				playingBank->waves[yi * BANK_GRID_WIDTH + eucmodi(xi + 1, BANK_GRID_WIDTH)].postSamples[index],
+				playingBank->waves[i_z0 + i_y0 + i_x0].postSamples[index],
+				playingBank->waves[i_z0 + i_y0 + i_x1].postSamples[index],
 				xf);
 			float v1 = crossf(
-				playingBank->waves[eucmodi(yi + 1, BANK_GRID_HEIGHT) * BANK_GRID_WIDTH + xi].postSamples[index],
-				playingBank->waves[eucmodi(yi + 1, BANK_GRID_HEIGHT) * BANK_GRID_WIDTH + eucmodi(xi + 1, BANK_GRID_WIDTH)].postSamples[index],
+				playingBank->waves[i_z0 + i_y1 + i_x0].postSamples[index],
+				playingBank->waves[i_z0 + i_y1 + i_x1].postSamples[index],
 				xf);
-			in[i] = crossf(v0, v1, yf);
+			float z0 = crossf(v0, v1, yf);
+
+			float v2 = crossf(
+				playingBank->waves[i_z1 + i_y0 + i_x0].postSamples[index],
+				playingBank->waves[i_z1 + i_y0 + i_x1].postSamples[index],
+				xf);
+			float v3 = crossf(
+				playingBank->waves[i_z1 + i_y1 + i_x0].postSamples[index],
+				playingBank->waves[i_z1 + i_y1 + i_x1].postSamples[index],
+				xf);
+			float z1 = crossf(v2, v3, yf);
+
+			in[i] = crossf(z0, z1, zf);
 		}
 		else {
 			// Morph Z
-			int zi = morphZSmooth;
-			float zf = morphZSmooth - zi;
+			int zi = browseSmooth;
+			float zf = browseSmooth - zi;
 			in[i] = crossf(
 				playingBank->waves[zi].postSamples[index],
 				playingBank->waves[eucmodi(zi + 1, BANK_LEN)].postSamples[index],
@@ -94,13 +125,13 @@ void audioCallback(void *userdata, Uint8 *stream, int len) {
 		src_callback_read(audioSrc, ratio, outLen, out);
 
 		// Modulate Z
-		if (!playModeXY && morphZSpeed > 0.f) {
-			float deltaZ = morphZSpeed * outLen / audioSpec.freq;
+		if (!playModeXY && browseSpeed > 0.f) {
+			float deltaZ = browseSpeed * outLen / audioSpec.freq;
 			deltaZ = clampf(deltaZ, 0.f, 1.f);
-			morphZ += (BANK_LEN-1) * deltaZ;
-			if (morphZ >= (BANK_LEN-1)) {
-				morphZ = fmodf(morphZ, (BANK_LEN-1));
-				morphZSmooth = morphZ;
+			browse += (BANK_LEN-1) * deltaZ;
+			if (browse >= (BANK_LEN-1)) {
+				browse = fmodf(browse, (BANK_LEN-1));
+				browseSmooth = browse;
 			}
 		}
 	}

@@ -178,9 +178,10 @@ extern bool clipboardActive;
 // bank.cpp
 ////////////////////
 
-#define BANK_LEN 27
-#define BANK_GRID_WIDTH 9
-#define BANK_GRID_HEIGHT 3
+#define BANK_GRID_DIM1 3
+#define BANK_GRID_DIM2 3
+#define BANK_GRID_DIM3 3
+#define BANK_LEN (BANK_GRID_DIM1*BANK_GRID_DIM2*BANK_GRID_DIM3)
 
 struct Bank {
 	Wave waves[BANK_LEN];
@@ -249,7 +250,8 @@ extern bool morphInterpolate;
 extern float morphX;
 extern float morphY;
 extern float morphZ;
-extern float morphZSpeed;
+extern float browse;
+extern float browseSpeed;
 extern int playIndex;
 extern const char *audioDeviceName;
 extern Bank *playingBank;
@@ -280,7 +282,8 @@ enum Tool {
 
 bool renderWave(const char *name, float height, float *points, int pointsLen, const float *lines, int linesLen, enum Tool tool = NO_TOOL);
 bool renderHistogram(const char *name, float height, float *bars, int barsLen, const float *ghost, int ghostLen, enum Tool tool);
-void renderBankGrid(const char *name, float height, int gridWidth, float *gridX, float *gridY);
+void renderBankGrid(const char *name, float height, int gridWidth, float *gridZ, float *browse);
+void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ);
 void renderWaterfall(const char *name, float height, float amplitude, float angle, float *activeZ);
 /** A widget like renderWave() except without editing, and bank lines are overlaid
 Returns the relative amount dragged

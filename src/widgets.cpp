@@ -447,6 +447,179 @@ void renderBankGrid(const char *name, float height, int gridWidth, float *gridX,
 	waveMenu();
 }
 
+/*
+Dim3 = waterfall
+Dim2 = Y
+Dim1 = X
+*/
+
+void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) {
+	int gridHeight 	= BANK_GRID_DIM1;
+	int gridWidth  	= BANK_GRID_DIM2;
+	int gridWfDepth = BANK_GRID_DIM3;
+
+	ImGuiContext &g = *GImGui;
+	ImGuiWindow *window = ImGui::GetCurrentWindow();
+	const ImGuiStyle &style = g.Style;
+	const ImGuiID id = window->GetID(name);
+	ImVec2 padding = style.FramePadding;
+	ImVec2 windowPadding = style.WindowPadding;
+
+	float height = ImGui::GetWindowSize().y - windowPadding.y - padding.y;
+	ImVec2 size = ImVec2(ImGui::CalcItemWidth(), height);
+	ImRect box = ImRect(window->DC.CursorPos, window->DC.CursorPos + size);
+	ImVec2 cellSize = ImVec2((size.x + padding.x) / gridWidth / gridWfDepth, (size.y + padding.y) / gridHeight);
+	ImGui::ItemSize(box, style.FramePadding.y);
+	if (!ImGui::ItemAdd(box, NULL))
+		return;
+
+	// Wave grid
+	int selectedStart = mini(selectedId, lastSelectedId);
+	int selectedEnd = maxi(selectedId, lastSelectedId);
+	for (int j = 0; j < BANK_LEN; j++) {
+		int x = (j % gridWidth) + (j / (gridHeight*gridWidth))*gridWidth;
+		int y = (j / gridWidth) % gridWidth;
+		// Compute cell box
+		ImVec2 cellPos = ImVec2(box.Min.x + cellSize.x * x, box.Min.y + cellSize.y * y);
+		ImRect cellBox = ImRect(cellPos, cellPos + cellSize - padding);
+		ImU32 col = ImGui::GetColorU32(ImGuiCol_FrameBg);
+		if (selectedStart <= j && j <= selectedEnd) {
+			col = ImGui::GetColorU32(ImGuiCol_WindowBg);
+		}
+		ImGui::RenderFrame(cellBox.Min, cellBox.Max, col, true, ImGui::GetStyle().FrameRounding);
+
+		if ((x%gridWidth)==2 && (y%gridWidth) ==0)
+			window->DrawList->AddLine(ImVec2(cellBox.Max.x + style.FramePadding.x/2, box.Min.y), ImVec2(cellBox.Max.x+ style.FramePadding.x/2, box.Max.y), ImGui::GetColorU32(ImGuiCol_Text));
+
+
+		// Draw lines
+		ImGui::PushClipRect(cellBox.Min, cellBox.Max, true);
+		ImVec2 lastPos;
+		for (int i = 0; i < WAVE_LEN; i++) {
+			float value = currentBank.waves[j].postSamples[i];
+			float margin = 3.0;
+			ImVec2 pos = ImVec2(rescalef(i, 0, WAVE_LEN - 1, cellBox.Min.x, cellBox.Max.x), rescalef(value, 1.0, -1.0, cellBox.Min.y + margin, cellBox.Max.y - margin));
+			if (i > 0)
+				window->DrawList->AddLine(lastPos, pos, ImGui::GetColorU32(ImGuiCol_PlotLines));
+			lastPos = pos;
+		}
+
+		// Draw cell label
+		char label[64];
+		snprintf(label, sizeof(label), "%d", j);
+		ImVec2 labelPos = cellPos + ImVec2(2, 2);
+		window->DrawList->AddText(labelPos, ImGui::GetColorU32(ImGuiCol_PlotLines), label);
+		ImGui::PopClipRect();
+	}
+
+	// Behavior
+	bool hovered = ImGui::IsHovered(box, id);
+	if (hovered) {
+		ImGui::SetHoveredID(id);
+		if (g.IO.MouseClicked[0]) {
+			ImGui::SetActiveID(id, window);
+			ImGui::FocusWindow(window);
+			g.ActiveIdClickOffset = g.IO.MousePos - box.Min;
+		}
+	}
+
+	// Unhover
+	if (g.ActiveId == id) {
+		if (!g.IO.MouseDown[0]) {
+			ImGui::ClearActiveID();
+		}
+	}
+
+	// Select wave if left-dragged or right-clicked
+	ImVec2 gridPos;
+	if (gridX && gridY) {
+		gridPos.x = *gridX;
+		gridPos.y = *gridY;
+	}
+
+	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
+		ImVec2 cellPos = g.IO.MousePos - cellSize / 2.0;
+		gridPos.x = clampf(rescalef(cellPos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridWfDepth), 0, gridWidth*gridWfDepth - 1);
+		gridPos.y = clampf(rescalef(cellPos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight - 1);
+
+		// Block select
+		int clickedId = (int)roundf(gridPos.y) * gridWidth + ((int)roundf(gridPos.x) % gridWidth) + ((int)roundf(gridPos.x) / gridWidth) * gridWidth*gridWidth;
+
+		// Ctrl-click dragging buffers
+		static Bank dragBank;
+		static Wave dragWaves[BANK_LEN];
+		static int dragId, dragStart, dragEnd;
+		if (g.IO.KeyCtrl && !g.IO.MouseReleased[0]) {
+			if (g.IO.MouseClicked[0]) {
+				dragBank = currentBank;
+				dragId = clickedId;
+				dragStart = selectedStart;
+				dragEnd = selectedEnd;
+				for (int i = dragStart; i <= dragEnd; i++) {
+					dragWaves[i] = currentBank.waves[i];
+				}
+			}
+			else {
+				int offsetId = clickedId - dragId;
+				currentBank = dragBank;
+				for (int i = dragStart; i <= dragEnd; i++) {
+					int j = i + offsetId;
+					if (0 <= j && j < BANK_LEN)
+						currentBank.waves[j] = dragWaves[i];
+				}
+				// Move selection
+				selectedId = clampi(dragStart + offsetId, 0, BANK_LEN-1);
+				lastSelectedId = clampi(dragEnd + offsetId, 0, BANK_LEN-1);
+			}
+		}
+		else if (g.IO.MouseClicked[1]) {
+			if (selectedStart <= clickedId && clickedId <= selectedEnd) {
+			}
+			else {
+				selectedId = clickedId;
+				lastSelectedId = clickedId;
+			}
+		}
+		else {
+			// Select block
+			if (g.IO.KeyShift) {
+				lastSelectedId = clickedId;
+			}
+			if (!g.IO.KeyShift) {
+				selectedId = clickedId;
+				lastSelectedId = clickedId;
+			}
+		}
+
+		// Update grid (cursor) position
+		if (g.IO.MouseDoubleClicked[0]) {
+			// Round gridPos to integers
+			gridPos.x = roundf(gridPos.x);
+			gridPos.y = roundf(gridPos.y);
+			ImGui::ClearActiveID();
+		}
+
+		if (!g.IO.MouseClicked[1] && (gridX && gridY)) {
+			*gridX = gridPos.x;
+			*gridY = gridPos.y;
+		}
+	}
+
+	// Cursor circle
+	if (gridX && gridY) {
+		ImVec2 circlePos = ImVec2(
+			rescalef(*gridX, 0.0, gridWidth, box.Min.x, box.Max.x),
+			rescalef(*gridY, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
+		ImGui::GetWindowDrawList()->AddCircleFilled(circlePos, 8.0, ImGui::GetColorU32(ImGuiCol_ScrollbarGrab), 24);
+	}
+
+	// Right click context menu
+	if (hovered && g.IO.MouseClicked[1]) {
+		ImGui::OpenPopup("Wave Menu");
+	}
+
+	waveMenu();
+}
 
 void renderWaterfall(const char *name, float height, float amplitude, float angle, float *activeZ) {
 	ImGuiContext &g = *GImGui;

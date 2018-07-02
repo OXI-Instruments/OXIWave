@@ -477,10 +477,13 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 	int selectedStart = mini(selectedId, lastSelectedId);
 	int selectedEnd = maxi(selectedId, lastSelectedId);
 	for (int j = 0; j < BANK_LEN; j++) {
-		int x = (j % gridWidth) + (j / (gridHeight*gridWidth))*gridWidth;
-		int y = (j / gridWidth) % gridWidth;
+		int x = (j % gridWidth);
+		int y = (j / gridWidth) % gridHeight;
+		int z = (j / (gridHeight*gridWidth));
+		int x_disp = x + z * gridWidth;
+
 		// Compute cell box
-		ImVec2 cellPos = ImVec2(box.Min.x + cellSize.x * x, box.Min.y + cellSize.y * y);
+		ImVec2 cellPos = ImVec2(box.Min.x + cellSize.x * x_disp, box.Min.y + cellSize.y * y);
 		ImRect cellBox = ImRect(cellPos, cellPos + cellSize - padding);
 		ImU32 col = ImGui::GetColorU32(ImGuiCol_FrameBg);
 		if (selectedStart <= j && j <= selectedEnd) {
@@ -488,11 +491,12 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		}
 		ImGui::RenderFrame(cellBox.Min, cellBox.Max, col, true, ImGui::GetStyle().FrameRounding);
 
+		//Line between "depths"
 		if ((x%gridWidth)==2 && (y%gridWidth) ==0)
 			window->DrawList->AddLine(ImVec2(cellBox.Max.x + style.FramePadding.x/2, box.Min.y), ImVec2(cellBox.Max.x+ style.FramePadding.x/2, box.Max.y), ImGui::GetColorU32(ImGuiCol_Text));
 
 
-		// Draw lines
+		// Draw waveform
 		ImGui::PushClipRect(cellBox.Min, cellBox.Max, true);
 		ImVec2 lastPos;
 		for (int i = 0; i < WAVE_LEN; i++) {
@@ -506,7 +510,7 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 
 		// Draw cell label
 		char label[64];
-		snprintf(label, sizeof(label), "%d", j);
+		snprintf(label, sizeof(label), "%d (%d, %d, %d)", j, x, y, z);
 		ImVec2 labelPos = cellPos + ImVec2(2, 2);
 		window->DrawList->AddText(labelPos, ImGui::GetColorU32(ImGuiCol_PlotLines), label);
 		ImGui::PopClipRect();

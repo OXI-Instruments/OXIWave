@@ -13,7 +13,8 @@ sdl2 = SDL2-2.0.7
 jansson = jansson-2.10
 libsndfile = libsndfile-1.0.28
 libsamplerate = libsamplerate-0.1.9
-libcurl = curl-7.54.1
+#libcurl = curl-7.54.1
+libcurl = curl-7.60.0
 
 
 # This instance of make should be serialized, but -j flags are passed down to each recursive Makefile

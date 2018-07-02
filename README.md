@@ -1,6 +1,6 @@
-# Synthesis Technology WaveEdit
+# SphereEdit
 
-The wavetable and bank editor for the Synthesis Technology [E370](http://synthtech.com/eurorack/E370/) and [E352](http://synthtech.com/eurorack/E352/) Eurorack synthesizer modules.
+Largely based on Synthesis Technology WaveEdit, the wavetable and bank editor for the Synthesis Technology [E370](http://synthtech.com/eurorack/E370/) and [E352](http://synthtech.com/eurorack/E352/) Eurorack synthesizer modules.
 
 ### Building
 

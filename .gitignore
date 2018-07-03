@@ -1,2 +1,11 @@
 *.o
+dep/bin/
+dep/include/
+dep/lib/
+dep/share/
+dep/SDL2*
+dep/curl*
+dep/jansson*
+dep/libsamplerate*
+dep/libsndfile*
 LOCAL/

@@ -453,7 +453,7 @@ Dim2 = Y
 Dim1 = X
 */
 
-void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) {
+void renderBankCube(const char *name, float *morphX, float *morphY, float *morphZ) {
 	char dbgtext[255];
 	int gridHeight 	= BANK_GRID_DIM1;
 	int gridWidth  	= BANK_GRID_DIM2;
@@ -480,7 +480,7 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 	if (!ImGui::ItemAdd(box, NULL))
 		return;
 
-	// Wave grid
+	// Draw the waves in a grid (2D grid, for now)
 	int selectedStart = mini(selectedId, lastSelectedId);
 	int selectedEnd = maxi(selectedId, lastSelectedId);
 	for (int j = 0; j < BANK_LEN; j++) {
@@ -488,11 +488,8 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		int y = (j / gridWidth) % gridHeight;
 		int z = (j / (gridHeight*gridWidth));
 
-		int x_disp = x + z * gridWidth;
-		int y_disp = y;
-
 		// Compute cell box
-		ImVec2 cellPos = ImVec2(box.Min.x + (cellSize.x * x) + (depthlayerSize.x * z), box.Min.y + cellSize.y * y_disp);
+		ImVec2 cellPos = ImVec2(box.Min.x + (cellSize.x * x) + (depthlayerSize.x * z), box.Min.y + cellSize.y * y);
 		ImRect cellBox = ImRect(cellPos, cellPos + cellSize - padding);
 
 		ImU32 col = ImGui::GetColorU32(ImGuiCol_FrameBg);
@@ -521,12 +518,12 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		ImGui::PopClipRect();
 	}
 
-	//Line between "depths"
+	// Draw box around between "depths"
 	for (int j=0;j<gridDepth;j++){
 		window->DrawList->AddRect(ImVec2(box.Min.x + j*depthlayerSize.x, box.Min.y), ImVec2(box.Min.x + (j + 1)*depthlayerSize.x - padding.x, box.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
 	}
 
-	// Behavior
+	// Click Behavior
 	bool hovered = ImGui::IsHovered(box, id);
 	if (hovered) {
 		ImGui::SetHoveredID(id);
@@ -544,31 +541,32 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		}
 	}
 
-	// Select wave if left-dragged or right-clicked
-	ImVec2 gridPos;
-	if (gridX && gridY) {
-		gridPos.x = *gridX;
-		gridPos.y = *gridY;
+
+	// (0,0,0) <= morphPos < (3,3,3)
+	ImVec3 morphPos;
+	ImVec2 viewPos;
+	if (morphX && morphY && morphZ) {
+		morphPos.x = *morphX;
+		morphPos.y = *morphY;
+		morphPos.z = *morphZ;
+
+		//convert morphPos (3D) to viewPos (2D)
+		viewPos.x = morphPos.x + (roundf(morphPos.z) * gridWidth);
+		viewPos.y = morphPos.y;
 	}
+
+	// Handle clicks
 
 	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
 		ImVec2 cellPos = g.IO.MousePos;// - cellSize / 2.0;
-		gridPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth-0.000001) -0.499999;
-		gridPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight-0.000001)-0.499999;
-
-		//todo: determine the x,y,z based on the mousePos. 
-		//then we have a viewPos.x/y and a gridX, gridY, gridZ
-		//perhaps create a ImVec3 type
-		// if (gridPos.x < 0) gridPos.x += gridWidth;
-		// if (gridPos.x > gridWidth) gridPos.x-= gridWidth;
-
-		// if (gridPos.y < 0) gridPos.y += gridHeight;
-		// if (gridPos.y > gridWidth) gridPos.y-= gridHeight;
+		viewPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth-0.000001) -0.499999;
+		viewPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight-0.000001)-0.499999;
 
 		// Block select
-		int clickedId = (int)roundf(gridPos.y) * gridWidth + ((int)roundf(gridPos.x) % gridWidth) + ((int)roundf(gridPos.x) / gridWidth) * gridWidth*gridWidth;
+		int clickedId = (int)roundf(viewPos.y) * gridWidth + ((int)roundf(viewPos.x) % gridWidth) + ((int)roundf(viewPos.x) / gridWidth) * gridWidth*gridWidth;
 
 		// Ctrl-click dragging buffers
+		// Todo: select/drag individual waves, not necessarily a range
 		static Bank dragBank;
 		static Wave dragWaves[BANK_LEN];
 		static int dragId, dragStart, dragEnd;
@@ -616,26 +614,27 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 
 		// Update grid (cursor) position
 		if (g.IO.MouseDoubleClicked[0]) {
-			// Round gridPos to integers
-			gridPos.x = roundf(gridPos.x);
-			gridPos.y = roundf(gridPos.y);
+			// Round viewPos to integers
+			viewPos.x = roundf(viewPos.x);
+			viewPos.y = roundf(viewPos.y);
 			ImGui::ClearActiveID();
 		}
 
-		if (!g.IO.MouseClicked[1] && (gridX && gridY)) {
-			*gridX = gridPos.x;
-			*gridY = gridPos.y;
+		if (!g.IO.MouseClicked[1] && (morphX && morphY && morphZ)) {
+			*morphX = eucmodf(viewPos.x, (float)gridWidth);
+			*morphY = viewPos.y;
+			*morphZ = (int)(viewPos.x+0.5) / gridWidth;
 		}
 	}
 
-	snprintf(dbgtext, sizeof(dbgtext), "gridX: %f, gridY: %f", *gridX, *gridY);
+	snprintf(dbgtext, sizeof(dbgtext), "morphX: %f, morphY: %f, morphZ: %f\n%f %f", *morphX, *morphY, *morphZ, viewPos.x, viewPos.y);
 	window->DrawList->AddText(g.IO.MousePos, IM_COL32(0x20, 0x20, 0x1d, 0xff), dbgtext);
 
 	// Cursor circle
-	if (gridX && gridY) {
+	if (morphX && morphY) {
 		ImVec2 circlePos = ImVec2(
-			rescalef(*gridX, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x),
-			rescalef(*gridY, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
+			rescalef(viewPos.x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x),
+			rescalef(viewPos.y, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
 		ImGui::GetWindowDrawList()->AddCircleFilled(circlePos, 8.0, ImGui::GetColorU32(ImGuiCol_ScrollbarGrab), 24);
 	}
 

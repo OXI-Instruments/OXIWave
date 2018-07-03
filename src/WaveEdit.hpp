@@ -43,6 +43,12 @@ inline int clampi(int x, int min, int max) {
 
 // Floats
 
+inline float eucmodf(float a, float base){
+	while (a>=base) a-=base;
+	while (a<0) a+=base;
+	return a;
+}
+
 inline float sgnf(float x) {
 	return copysignf(1.0, x);
 }
@@ -267,6 +273,13 @@ void audioDestroy();
 ////////////////////
 // widgets.cpp
 ////////////////////
+
+struct ImVec3
+{
+    float x, y, z;
+    ImVec3() { x = y = z = 0.0f; }
+    ImVec3(float _x, float _y, float _z) { x = _x; y = _y; z = _z; }
+};
 
 enum Tool {
 	NO_TOOL,

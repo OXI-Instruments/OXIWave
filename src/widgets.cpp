@@ -454,9 +454,10 @@ Dim1 = X
 */
 
 void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) {
+	char dbgtext[255];
 	int gridHeight 	= BANK_GRID_DIM1;
 	int gridWidth  	= BANK_GRID_DIM2;
-	int gridWfDepth = BANK_GRID_DIM3;
+	int gridDepth = BANK_GRID_DIM3;
 
 	ImGuiContext &g = *GImGui;
 	ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -464,11 +465,17 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 	const ImGuiID id = window->GetID(name);
 	ImVec2 padding = style.FramePadding;
 	ImVec2 windowPadding = style.WindowPadding;
+	ImVec2 depthlayerPadding = style.FramePadding * 10;
 
 	float height = ImGui::GetWindowSize().y - windowPadding.y - padding.y;
-	ImVec2 size = ImVec2(ImGui::CalcItemWidth(), height);
+	float width = ImGui::CalcItemWidth() - depthlayerPadding.x*2;
+
+	ImVec2 size = ImVec2(width, height);
 	ImRect box = ImRect(window->DC.CursorPos, window->DC.CursorPos + size);
-	ImVec2 cellSize = ImVec2((size.x + padding.x) / gridWidth / gridWfDepth, (size.y + padding.y) / gridHeight);
+	ImVec2 cellSize = ImVec2((size.x) / gridWidth / gridDepth, (size.y + padding.y) / gridHeight);
+
+	ImVec2 depthlayerSize = ImVec2(cellSize.x * gridWidth, cellSize.y * gridHeight);
+
 	ImGui::ItemSize(box, style.FramePadding.y);
 	if (!ImGui::ItemAdd(box, NULL))
 		return;
@@ -480,21 +487,19 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		int x = (j % gridWidth);
 		int y = (j / gridWidth) % gridHeight;
 		int z = (j / (gridHeight*gridWidth));
+
 		int x_disp = x + z * gridWidth;
+		int y_disp = y;
 
 		// Compute cell box
-		ImVec2 cellPos = ImVec2(box.Min.x + cellSize.x * x_disp, box.Min.y + cellSize.y * y);
+		ImVec2 cellPos = ImVec2(box.Min.x + (cellSize.x * x) + (depthlayerSize.x * z), box.Min.y + cellSize.y * y_disp);
 		ImRect cellBox = ImRect(cellPos, cellPos + cellSize - padding);
+
 		ImU32 col = ImGui::GetColorU32(ImGuiCol_FrameBg);
 		if (selectedStart <= j && j <= selectedEnd) {
 			col = ImGui::GetColorU32(ImGuiCol_WindowBg);
 		}
 		ImGui::RenderFrame(cellBox.Min, cellBox.Max, col, true, ImGui::GetStyle().FrameRounding);
-
-		//Line between "depths"
-		if ((x%gridWidth)==2 && (y%gridWidth) ==0)
-			window->DrawList->AddLine(ImVec2(cellBox.Max.x + style.FramePadding.x/2, box.Min.y), ImVec2(cellBox.Max.x+ style.FramePadding.x/2, box.Max.y), ImGui::GetColorU32(ImGuiCol_Text));
-
 
 		// Draw waveform
 		ImGui::PushClipRect(cellBox.Min, cellBox.Max, true);
@@ -514,6 +519,11 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		ImVec2 labelPos = cellPos + ImVec2(2, 2);
 		window->DrawList->AddText(labelPos, ImGui::GetColorU32(ImGuiCol_PlotLines), label);
 		ImGui::PopClipRect();
+	}
+
+	//Line between "depths"
+	for (int j=0;j<gridDepth;j++){
+		window->DrawList->AddRect(ImVec2(box.Min.x + j*depthlayerSize.x, box.Min.y), ImVec2(box.Min.x + (j + 1)*depthlayerSize.x - padding.x, box.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
 	}
 
 	// Behavior
@@ -542,9 +552,18 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 	}
 
 	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
-		ImVec2 cellPos = g.IO.MousePos - cellSize / 2.0;
-		gridPos.x = clampf(rescalef(cellPos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridWfDepth), 0, gridWidth*gridWfDepth - 1);
-		gridPos.y = clampf(rescalef(cellPos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight - 1);
+		ImVec2 cellPos = g.IO.MousePos;// - cellSize / 2.0;
+		gridPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth-0.000001) -0.499999;
+		gridPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight-0.000001)-0.499999;
+
+		//todo: determine the x,y,z based on the mousePos. 
+		//then we have a viewPos.x/y and a gridX, gridY, gridZ
+		//perhaps create a ImVec3 type
+		// if (gridPos.x < 0) gridPos.x += gridWidth;
+		// if (gridPos.x > gridWidth) gridPos.x-= gridWidth;
+
+		// if (gridPos.y < 0) gridPos.y += gridHeight;
+		// if (gridPos.y > gridWidth) gridPos.y-= gridHeight;
 
 		// Block select
 		int clickedId = (int)roundf(gridPos.y) * gridWidth + ((int)roundf(gridPos.x) % gridWidth) + ((int)roundf(gridPos.x) / gridWidth) * gridWidth*gridWidth;
@@ -609,10 +628,13 @@ void renderBankCube(const char *name, float *gridX, float *gridY, float *gridZ) 
 		}
 	}
 
+	snprintf(dbgtext, sizeof(dbgtext), "gridX: %f, gridY: %f", *gridX, *gridY);
+	window->DrawList->AddText(g.IO.MousePos, IM_COL32(0x20, 0x20, 0x1d, 0xff), dbgtext);
+
 	// Cursor circle
 	if (gridX && gridY) {
 		ImVec2 circlePos = ImVec2(
-			rescalef(*gridX, 0.0, gridWidth, box.Min.x, box.Max.x),
+			rescalef(*gridX, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x),
 			rescalef(*gridY, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
 		ImGui::GetWindowDrawList()->AddCircleFilled(circlePos, 8.0, ImGui::GetColorU32(ImGuiCol_ScrollbarGrab), 24);
 	}

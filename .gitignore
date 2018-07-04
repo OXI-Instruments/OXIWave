@@ -9,3 +9,7 @@ dep/jansson*
 dep/libsamplerate*
 dep/libsndfile*
 LOCAL/
+
+dep/\.DS_Store
+
+\.DS_Store

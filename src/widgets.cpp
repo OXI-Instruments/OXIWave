@@ -543,27 +543,46 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 
 
 	// (0,0,0) <= morphPos < (3,3,3)
-	ImVec3 morphPos;
-	ImVec2 viewPos;
+	ImVec3 	morphPos;
+	ImVec2 	viewPos, oviewPos, clickPos;
+	ImVec2 	circlePos[BANK_GRID_DIM3];
+	float	circleOpacity[BANK_GRID_DIM3];
+
 	if (morphX && morphY && morphZ) {
 		morphPos.x = *morphX;
 		morphPos.y = *morphY;
 		morphPos.z = *morphZ;
 
+		for (int i=0;i<BANK_GRID_DIM3;i++){
+			circlePos[i].x = eucmodf(morphPos.x + 0.5, gridWidth) + i*gridWidth;
+			circlePos[i].y = eucmodf(morphPos.y + 0.5, gridHeight);
+			circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
+			//z: 0		.1		1	1.1		2	2.1	2.9
+			//0: 1		0.9		0	0		0	.1	.9
+			//1: 0		0.1		1	0.9		0	0	0
+			//2: 0		0		0	0.1		1	0.9	0.1
+		}
+
 		//convert morphPos (3D) to viewPos (2D)
-		viewPos.x = morphPos.x + (roundf(morphPos.z) * gridWidth);
+		viewPos.x = eucmodf(morphPos.x + (floor(morphPos.z) * gridWidth) + 0.5, (float)(gridWidth*gridDepth));
 		viewPos.y = morphPos.y;
+
+		oviewPos.x = eucmodf(morphPos.x + (floor(morphPos.z) * gridWidth) + 0.5, (float)(gridWidth*gridDepth));
+		oviewPos.y = morphPos.y;
+
 	}
 
 	// Handle clicks
 
 	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
 		ImVec2 cellPos = g.IO.MousePos;// - cellSize / 2.0;
-		viewPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth-0.000001) -0.499999;
-		viewPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight-0.000001)-0.499999;
+		//mouse.x: [0,9]
+		//clickedId 
+		clickPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth-0.000001);
+		clickPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight-0.000001);
 
 		// Block select
-		int clickedId = (int)roundf(viewPos.y) * gridWidth + ((int)roundf(viewPos.x) % gridWidth) + ((int)roundf(viewPos.x) / gridWidth) * gridWidth*gridWidth;
+		int clickedId = (int)roundf(clickPos.y-0.5) * gridWidth + ((int)roundf(clickPos.x-0.5) % gridWidth) + ((int)roundf(clickPos.x-0.5) / gridWidth) * gridWidth*gridWidth;
 
 		// Ctrl-click dragging buffers
 		// Todo: select/drag individual waves, not necessarily a range
@@ -615,27 +634,36 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		// Update grid (cursor) position
 		if (g.IO.MouseDoubleClicked[0]) {
 			// Round viewPos to integers
-			viewPos.x = roundf(viewPos.x);
-			viewPos.y = roundf(viewPos.y);
+			viewPos.x = roundf(clickPos.x-0.5);
+			viewPos.y = roundf(clickPos.y-0.5);
 			ImGui::ClearActiveID();
+		}
+		else
+		{
+			viewPos = clickPos;
 		}
 
 		if (!g.IO.MouseClicked[1] && (morphX && morphY && morphZ)) {
-			*morphX = eucmodf(viewPos.x, (float)gridWidth);
-			*morphY = viewPos.y;
-			*morphZ = (int)(viewPos.x+0.5) / gridWidth;
+			*morphX = eucmodf(viewPos.x-0.5, (float)gridWidth);
+			*morphY = viewPos.y-0.5;
+			*morphZ = (int)(viewPos.x) / gridWidth;
 		}
 	}
 
-	snprintf(dbgtext, sizeof(dbgtext), "morphX: %f, morphY: %f, morphZ: %f\n%f %f", *morphX, *morphY, *morphZ, viewPos.x, viewPos.y);
+	snprintf(dbgtext, sizeof(dbgtext), "morphX: %f, morphY: %f, morphZ: %f\n%f %f\n%f %f", *morphX, *morphY, *morphZ, oviewPos.x, oviewPos.y, viewPos.x, viewPos.y);
 	window->DrawList->AddText(g.IO.MousePos, IM_COL32(0x20, 0x20, 0x1d, 0xff), dbgtext);
 
 	// Cursor circle
-	if (morphX && morphY) {
-		ImVec2 circlePos = ImVec2(
-			rescalef(viewPos.x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x),
-			rescalef(viewPos.y, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
-		ImGui::GetWindowDrawList()->AddCircleFilled(circlePos, 8.0, ImGui::GetColorU32(ImGuiCol_ScrollbarGrab), 24);
+	if (morphX && morphY && morphZ) {
+		// ImVec2 circlePos = ImVec2(
+		// 	rescalef(viewPos.x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x),
+		// 	rescalef(viewPos.y, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
+		for (int i=0;i<BANK_GRID_DIM3;i++){
+			circlePos[i].x = rescalef(circlePos[i].x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x);
+			circlePos[i].y = rescalef(circlePos[i].y, 0.0, gridHeight, box.Min.y, box.Max.y);			
+			ImGui::GetWindowDrawList()->AddCircleFilled(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_ResizeGripActive, circleOpacity[i]), 24);
+			ImGui::GetWindowDrawList()->AddCircle(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_ResizeGripActive), 24, 1.0);
+		}
 	}
 
 	// Right click context menu

@@ -481,11 +481,11 @@ void renderPreview() {
 		ImGui::PushItemWidth(-1.0);
 		float width = ImGui::CalcItemWidth() / 4.0 - ImGui::GetStyle().FramePadding.y;
 		ImGui::PushItemWidth(width);
-		ImGui::SliderFloat("##Morph X", &morphX, 0.0, BANK_GRID_DIM1 - 1, "Morph X: %.3f");
+		ImGui::SliderFloat("##Morph X", &morphX, 0.0, BANK_GRID_DIM1, "Morph X: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Morph Y", &morphY, 0.0, BANK_GRID_DIM2 - 1, "Morph Y: %.3f");
+		ImGui::SliderFloat("##Morph Y", &morphY, 0.0, BANK_GRID_DIM2, "Morph Y: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Morph Z", &morphZ, 0.0, BANK_GRID_DIM3 - 1, "Morph Z: %.3f");
+		ImGui::SliderFloat("##Morph Z", &morphZ, 0.0, BANK_GRID_DIM3, "Morph Z: %.3f");
 	}
 	else {
 		ImGui::SameLine();

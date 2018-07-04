@@ -447,11 +447,6 @@ void renderBankGrid(const char *name, float height, int gridWidth, float *gridX,
 	waveMenu();
 }
 
-/*
-Dim3 = waterfall
-Dim2 = Y
-Dim1 = X
-*/
 
 void renderBankCube(const char *name, float *morphX, float *morphY, float *morphZ) {
 	char dbgtext[255];
@@ -541,10 +536,8 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		}
 	}
 
-
-	// (0,0,0) <= morphPos < (3,3,3)
 	ImVec3 	morphPos;
-	ImVec2 	viewPos, oviewPos, clickPos;
+	ImVec2 	viewPos, clickPos;
 	ImVec2 	circlePos[BANK_GRID_DIM3];
 	float	circleOpacity[BANK_GRID_DIM3];
 
@@ -560,39 +553,22 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 				circleOpacity[i] = clampf(1.0f - fabs((morphPos.z - 3.0) - (float)i), 0.0f, 1.0f);
 			else
 				circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
-			//z: 0		.1		1	1.1		2	2.1	2.9
-			//0: 1		0.9		0	0		0	.1	.9
-			//1: 0		0.1		1	0.9		0	0	0
-			//2: 0		0		0	0.1		1	0.9	0.1
-
-			//2.0 = -1.0
-			//2.1 = -0.9
-			//
 		}
 
 		//convert morphPos (3D) to viewPos (2D)
-		viewPos.x = eucmodf(morphPos.x + (floor(morphPos.z) * gridWidth) + 0.5, (float)(gridWidth*gridDepth));
-		viewPos.y = morphPos.y;
-
-		oviewPos.x = eucmodf(morphPos.x + (floor(morphPos.z) * gridWidth) + 0.5, (float)(gridWidth*gridDepth));
-		oviewPos.y = morphPos.y;
-
+		// viewPos.x = eucmodf(morphPos.x + (floor(morphPos.z) * gridWidth) + 0.5, (float)(gridWidth*gridDepth));
+		// viewPos.y = morphPos.y;
 	}
 
 	// Handle clicks
-
 	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
-		ImVec2 cellPos = g.IO.MousePos;// - cellSize / 2.0;
-		//mouse.x: [0,9]
-		//clickedId 
 		clickPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth);
 		clickPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight);
 
-		// Block select
 		int clickedId = (int)roundf(clickPos.y-0.5) * gridWidth + ((int)roundf(clickPos.x-0.5) % gridWidth) + ((int)roundf(clickPos.x-0.5) / gridWidth) * gridWidth*gridWidth;
 
 		// Ctrl-click dragging buffers
-		// Todo: select/drag individual waves, not necessarily a range
+		// Todo: select a 2D range, not just linear range
 		static Bank dragBank;
 		static Wave dragWaves[BANK_LEN];
 		static int dragId, dragStart, dragEnd;
@@ -640,31 +616,25 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 
 		// Update grid (cursor) position
 		if (g.IO.MouseDoubleClicked[0]) {
-			// Round viewPos to integers
-			viewPos.x = roundf(clickPos.x-0.5);
-			viewPos.y = roundf(clickPos.y-0.5);
+			// Round to center of cells
+			clickPos.x = roundf(clickPos.x-0.5)+0.5;
+			clickPos.y = roundf(clickPos.y-0.5)+0.5;
 			ImGui::ClearActiveID();
 		}
-		else
-		{
-			viewPos = clickPos;
-		}
+
 
 		if (!g.IO.MouseClicked[1] && (morphX && morphY && morphZ)) {
-			*morphX = eucmodf(viewPos.x-0.5, (float)gridWidth);
-			*morphY = viewPos.y-0.5;
-			*morphZ = (int)(viewPos.x) / gridWidth;
+			*morphX = eucmodf(clickPos.x-0.5, (float)gridWidth);
+			*morphY = eucmodf(clickPos.y-0.5, (float)gridHeight);
+			*morphZ = (int)(clickPos.x) / gridWidth;
 		}
 	}
 
-	snprintf(dbgtext, sizeof(dbgtext), "morphX: %f, morphY: %f, morphZ: %f\n%f %f\n%f %f", *morphX, *morphY, *morphZ, oviewPos.x, oviewPos.y, viewPos.x, viewPos.y);
-	window->DrawList->AddText(g.IO.MousePos, IM_COL32(0x20, 0x20, 0x1d, 0xff), dbgtext);
+	// snprintf(dbgtext, sizeof(dbgtext), "morphX: %f, morphY: %f, morphZ: %f\n%f %f\n%f %f", *morphX, *morphY, *morphZ, oviewPos.x, oviewPos.y, viewPos.x, viewPos.y);
+	// window->DrawList->AddText(g.IO.MousePos, IM_COL32(0x20, 0x20, 0x1d, 0xff), dbgtext);
 
-	// Cursor circle
+	// Cursor circles
 	if (morphX && morphY && morphZ) {
-		// ImVec2 circlePos = ImVec2(
-		// 	rescalef(viewPos.x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x),
-		// 	rescalef(viewPos.y, 0.0, gridHeight, box.Min.y, box.Max.y)) + cellSize / 2.0;
 		for (int i=0;i<BANK_GRID_DIM3;i++){
 			circlePos[i].x = rescalef(circlePos[i].x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x);
 			circlePos[i].y = rescalef(circlePos[i].y, 0.0, gridHeight, box.Min.y, box.Max.y);			

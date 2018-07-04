@@ -778,7 +778,7 @@ void renderMain() {
 			static const char *tabLabels[NUM_PAGES] = {
 				"Waveform Editor",
 				"Effect Editor",
-				"Grid XY View",
+				"Grid XYZ View",
 				"Waterfall View",
 				"Import",
 				"WaveEdit Online"

@@ -32,11 +32,15 @@ long srcCallback(void *cb_data, float **data) {
 	static float in[inLen];
 	for (int i = 0; i < inLen; i++) {
 		if (morphInterpolate) {
-			const float lambdaMorph = fminf(0.1 / playFrequency, 0.5);
-			morphXSmooth = crossf(morphXSmooth, clampf(morphX, 0.0, BANK_GRID_DIM1 - 1), lambdaMorph);
-			morphYSmooth = crossf(morphYSmooth, clampf(morphY, 0.0, BANK_GRID_DIM2 - 1), lambdaMorph);
-			morphZSmooth = crossf(morphZSmooth, clampf(morphZ, 0.0, BANK_GRID_DIM3 - 1), lambdaMorph);
-			browseSmooth = crossf(browseSmooth, clampf(browse, 0.0, BANK_LEN - 1), lambdaMorph);
+			// const float lambdaMorph = fminf(0.1 / playFrequency, 0.5);
+			// morphXSmooth = crossf(morphXSmooth, eucmodf(morphX, BANK_GRID_DIM1-0.000001), lambdaMorph);
+			// morphYSmooth = crossf(morphYSmooth, eucmodf(morphY, BANK_GRID_DIM2-0.000001), lambdaMorph);
+			// morphZSmooth = crossf(morphZSmooth, eucmodf(morphZ, BANK_GRID_DIM3-0.000001), lambdaMorph);
+			// browseSmooth = crossf(browseSmooth, clampf(browse, 0.0, BANK_LEN - 1), lambdaMorph);
+			morphXSmooth = eucmodf(morphX, BANK_GRID_DIM1-0.000001);
+			morphYSmooth = eucmodf(morphY, BANK_GRID_DIM2-0.000001);
+			morphZSmooth = eucmodf(morphZ, BANK_GRID_DIM3-0.000001);
+			browseSmooth = eucmodf(browse, BANK_LEN - 0.000001);
 		}
 		else {
 			// Snap X, Y, Z
@@ -60,14 +64,14 @@ long srcCallback(void *cb_data, float **data) {
 			float zf = morphZSmooth - zi;
 
 			// 3D linear interpolate
-			int i_z0 = zi*BANK_GRID_DIM1*BANK_GRID_DIM2;
-			int i_z1 = eucmodi(zi + 1, BANK_GRID_DIM3);
-
-			int i_y0 = yi*BANK_GRID_DIM1;
-			int i_y1 = eucmodi(yi + 1, BANK_GRID_DIM2);
-
 			int i_x0 = xi;
 			int i_x1 = eucmodi(xi + 1, BANK_GRID_DIM1);
+
+			int i_y0 = yi*BANK_GRID_DIM1;
+			int i_y1 = eucmodi(yi + 1, BANK_GRID_DIM2) * BANK_GRID_DIM1;
+
+			int i_z0 = zi*BANK_GRID_DIM1*BANK_GRID_DIM2;
+			int i_z1 = eucmodi(zi + 1, BANK_GRID_DIM3)*BANK_GRID_DIM1*BANK_GRID_DIM2;
 
 			float v0 = crossf(
 				playingBank->waves[i_z0 + i_y0 + i_x0].postSamples[index],

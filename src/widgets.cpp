@@ -556,11 +556,18 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		for (int i=0;i<BANK_GRID_DIM3;i++){
 			circlePos[i].x = eucmodf(morphPos.x + 0.5, gridWidth) + i*gridWidth;
 			circlePos[i].y = eucmodf(morphPos.y + 0.5, gridHeight);
-			circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
+			if (morphPos.z > 2.0 && i==0)
+				circleOpacity[i] = clampf(1.0f - fabs((morphPos.z - 3.0) - (float)i), 0.0f, 1.0f);
+			else
+				circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
 			//z: 0		.1		1	1.1		2	2.1	2.9
 			//0: 1		0.9		0	0		0	.1	.9
 			//1: 0		0.1		1	0.9		0	0	0
 			//2: 0		0		0	0.1		1	0.9	0.1
+
+			//2.0 = -1.0
+			//2.1 = -0.9
+			//
 		}
 
 		//convert morphPos (3D) to viewPos (2D)
@@ -578,8 +585,8 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		ImVec2 cellPos = g.IO.MousePos;// - cellSize / 2.0;
 		//mouse.x: [0,9]
 		//clickedId 
-		clickPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth-0.000001);
-		clickPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight-0.000001);
+		clickPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth);
+		clickPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight);
 
 		// Block select
 		int clickedId = (int)roundf(clickPos.y-0.5) * gridWidth + ((int)roundf(clickPos.x-0.5) % gridWidth) + ((int)roundf(clickPos.x-0.5) / gridWidth) * gridWidth*gridWidth;

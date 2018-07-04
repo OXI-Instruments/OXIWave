@@ -449,42 +449,39 @@ void renderBankGrid(const char *name, float height, int gridWidth, float *gridX,
 
 
 void renderBankCube(const char *name, float *morphX, float *morphY, float *morphZ) {
-	char dbgtext[255];
-	int gridHeight 	= BANK_GRID_DIM1;
-	int gridWidth  	= BANK_GRID_DIM2;
-	int gridDepth = BANK_GRID_DIM3;
-
 	ImGuiContext &g = *GImGui;
 	ImGuiWindow *window = ImGui::GetCurrentWindow();
+
 	const ImGuiStyle &style = g.Style;
 	const ImGuiID id = window->GetID(name);
 	ImVec2 padding = style.FramePadding;
 	ImVec2 windowPadding = style.WindowPadding;
-	ImVec2 depthlayerPadding = style.FramePadding * 10;
+	ImVec2 depthlayerPadding = style.FramePadding * 20;
 
 	float height = ImGui::GetWindowSize().y - windowPadding.y - padding.y;
-	float width = ImGui::CalcItemWidth() - depthlayerPadding.x*2;
+	float width = ImGui::CalcItemWidth();
 
-	ImVec2 size = ImVec2(width, height);
-	ImRect box = ImRect(window->DC.CursorPos, window->DC.CursorPos + size);
-	ImVec2 cellSize = ImVec2((size.x) / gridWidth / gridDepth, (size.y + padding.y) / gridHeight);
+	ImVec2 gridsize = ImVec2(width, height);
+	ImRect gridbox = ImRect(window->DC.CursorPos, window->DC.CursorPos + gridsize);
 
-	ImVec2 depthlayerSize = ImVec2(cellSize.x * gridWidth, cellSize.y * gridHeight);
+	ImVec2 cellSize = ImVec2((gridsize.x) / BANK_GRID_DIM1 / BANK_GRID_DIM3, (gridsize.y + padding.y) / BANK_GRID_DIM2);
 
-	ImGui::ItemSize(box, style.FramePadding.y);
-	if (!ImGui::ItemAdd(box, NULL))
+	ImVec2 depthlayerSize = ImVec2(cellSize.x * BANK_GRID_DIM1, cellSize.y * BANK_GRID_DIM2);
+
+	ImGui::ItemSize(gridbox, style.FramePadding.y);
+	if (!ImGui::ItemAdd(gridbox, NULL))
 		return;
 
-	// Draw the waves in a grid (2D grid, for now)
+	// Draw the waves in a grid
 	int selectedStart = mini(selectedId, lastSelectedId);
 	int selectedEnd = maxi(selectedId, lastSelectedId);
 	for (int j = 0; j < BANK_LEN; j++) {
-		int x = (j % gridWidth);
-		int y = (j / gridWidth) % gridHeight;
-		int z = (j / (gridHeight*gridWidth));
+		int x = (j % BANK_GRID_DIM1);
+		int y = (j / BANK_GRID_DIM1) % BANK_GRID_DIM2;
+		int z = (j / (BANK_GRID_DIM1*BANK_GRID_DIM2))  % BANK_GRID_DIM3;
 
-		// Compute cell box
-		ImVec2 cellPos = ImVec2(box.Min.x + (cellSize.x * x) + (depthlayerSize.x * z), box.Min.y + cellSize.y * y);
+		// Compute cell gridbox
+		ImVec2 cellPos = ImVec2(gridbox.Min.x + (cellSize.x * x) + (depthlayerSize.x * z), gridbox.Min.y + cellSize.y * y);
 		ImRect cellBox = ImRect(cellPos, cellPos + cellSize - padding);
 
 		ImU32 col = ImGui::GetColorU32(ImGuiCol_FrameBg);
@@ -513,19 +510,19 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		ImGui::PopClipRect();
 	}
 
-	// Draw box around between "depths"
-	for (int j=0;j<gridDepth;j++){
-		window->DrawList->AddRect(ImVec2(box.Min.x + j*depthlayerSize.x, box.Min.y), ImVec2(box.Min.x + (j + 1)*depthlayerSize.x - padding.x, box.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
+	// Draw gridbox around between "depths"
+	for (int j=0;j<BANK_GRID_DIM3;j++){
+		window->DrawList->AddRect(ImVec2(gridbox.Min.x + j*depthlayerSize.x, gridbox.Min.y), ImVec2(gridbox.Min.x + (j + 1)*depthlayerSize.x - padding.x, gridbox.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
 	}
 
-	// Click Behavior
-	bool hovered = ImGui::IsHovered(box, id);
+	// Window Focus on click
+	bool hovered = ImGui::IsHovered(gridbox, id);
 	if (hovered) {
 		ImGui::SetHoveredID(id);
 		if (g.IO.MouseClicked[0]) {
 			ImGui::SetActiveID(id, window);
 			ImGui::FocusWindow(window);
-			g.ActiveIdClickOffset = g.IO.MousePos - box.Min;
+			g.ActiveIdClickOffset = g.IO.MousePos - gridbox.Min;
 		}
 	}
 
@@ -547,25 +544,21 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		morphPos.z = *morphZ;
 
 		for (int i=0;i<BANK_GRID_DIM3;i++){
-			circlePos[i].x = eucmodf(morphPos.x + 0.5, gridWidth) + i*gridWidth;
-			circlePos[i].y = eucmodf(morphPos.y + 0.5, gridHeight);
+			circlePos[i].x = eucmodf(morphPos.x + 0.5, BANK_GRID_DIM2) + i*BANK_GRID_DIM2;
+			circlePos[i].y = eucmodf(morphPos.y + 0.5, BANK_GRID_DIM1);
 			if (morphPos.z > 2.0 && i==0)
 				circleOpacity[i] = clampf(1.0f - fabs((morphPos.z - 3.0) - (float)i), 0.0f, 1.0f);
 			else
 				circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
 		}
-
-		//convert morphPos (3D) to viewPos (2D)
-		// viewPos.x = eucmodf(morphPos.x + (floor(morphPos.z) * gridWidth) + 0.5, (float)(gridWidth*gridDepth));
-		// viewPos.y = morphPos.y;
 	}
 
 	// Handle clicks
 	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
-		clickPos.x = clampf(rescalef(g.IO.MousePos.x, box.Min.x, box.Max.x, 0.0, gridWidth*gridDepth), 0, gridWidth*gridDepth);
-		clickPos.y = clampf(rescalef(g.IO.MousePos.y, box.Min.y, box.Max.y, 0.0, gridHeight), 0, gridHeight);
+		clickPos.x = clampf(rescalef(g.IO.MousePos.x, gridbox.Min.x, gridbox.Max.x, 0.0, BANK_GRID_DIM2*BANK_GRID_DIM3), 0, BANK_GRID_DIM2*BANK_GRID_DIM3);
+		clickPos.y = clampf(rescalef(g.IO.MousePos.y, gridbox.Min.y, gridbox.Max.y, 0.0, BANK_GRID_DIM1), 0, BANK_GRID_DIM1);
 
-		int clickedId = (int)roundf(clickPos.y-0.5) * gridWidth + ((int)roundf(clickPos.x-0.5) % gridWidth) + ((int)roundf(clickPos.x-0.5) / gridWidth) * gridWidth*gridWidth;
+		int clickedId = (int)roundf(clickPos.y-0.5) * BANK_GRID_DIM2 + ((int)roundf(clickPos.x-0.5) % BANK_GRID_DIM2) + ((int)roundf(clickPos.x-0.5) / BANK_GRID_DIM2) * BANK_GRID_DIM2*BANK_GRID_DIM2;
 
 		// Ctrl-click dragging buffers
 		// Todo: select a 2D range, not just linear range
@@ -624,9 +617,9 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 
 
 		if (!g.IO.MouseClicked[1] && (morphX && morphY && morphZ)) {
-			*morphX = eucmodf(clickPos.x-0.5, (float)gridWidth);
-			*morphY = eucmodf(clickPos.y-0.5, (float)gridHeight);
-			*morphZ = (int)(clickPos.x) / gridWidth;
+			*morphX = eucmodf(clickPos.x-0.5, (float)BANK_GRID_DIM2);
+			*morphY = eucmodf(clickPos.y-0.5, (float)BANK_GRID_DIM1);
+			*morphZ = (int)(clickPos.x) / BANK_GRID_DIM2;
 		}
 	}
 
@@ -636,8 +629,8 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 	// Cursor circles
 	if (morphX && morphY && morphZ) {
 		for (int i=0;i<BANK_GRID_DIM3;i++){
-			circlePos[i].x = rescalef(circlePos[i].x, 0.0, gridWidth*gridDepth, box.Min.x, box.Max.x);
-			circlePos[i].y = rescalef(circlePos[i].y, 0.0, gridHeight, box.Min.y, box.Max.y);			
+			circlePos[i].x = rescalef(circlePos[i].x, 0.0, BANK_GRID_DIM2*BANK_GRID_DIM3, gridbox.Min.x, gridbox.Max.x);
+			circlePos[i].y = rescalef(circlePos[i].y, 0.0, BANK_GRID_DIM1, gridbox.Min.y, gridbox.Max.y);			
 			ImGui::GetWindowDrawList()->AddCircleFilled(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_ResizeGripActive, circleOpacity[i]), 24);
 			ImGui::GetWindowDrawList()->AddCircle(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_ResizeGripActive), 24, 1.0);
 		}

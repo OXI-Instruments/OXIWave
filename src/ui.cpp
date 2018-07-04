@@ -31,6 +31,7 @@ static int styleId = 0;
 int selectedId = 0;
 int lastSelectedId = 0;
 
+float morph_step_size = 0.1;
 
 static void refreshStyle();
 
@@ -99,8 +100,8 @@ static void selectWave(int waveId) {
 	selectedId = waveId;
 	lastSelectedId = selectedId;
 	morphX = (float)(selectedId % BANK_GRID_DIM1);
-	morphY = (float)((selectedId / BANK_GRID_DIM2) % BANK_GRID_DIM2);
-	morphZ = (float)(selectedId / BANK_GRID_DIM3);
+	morphY = (float)((selectedId / BANK_GRID_DIM1) % BANK_GRID_DIM2);
+	morphZ = (float)((selectedId / (BANK_GRID_DIM1 * BANK_GRID_DIM2)) % BANK_GRID_DIM3);
 	browse = (float)selectedId;
 }
 
@@ -237,7 +238,28 @@ static void menuRandomize() {
 }
 
 static void incrementSelectedId(int delta) {
-	selectWave(clampi(selectedId + delta, 0, BANK_LEN-1));
+	selectWave(eucmodi(selectedId + delta, BANK_LEN));
+}
+
+static int findIDfromMorph(void) {
+	int x_contrib = eucmodi((int)roundf(morphX),BANK_GRID_DIM1);
+	int y_contrib = eucmodi((int)roundf(morphY),BANK_GRID_DIM2);
+	int z_contrib = eucmodi((int)roundf(morphZ),BANK_GRID_DIM3);
+
+	return x_contrib + y_contrib*BANK_GRID_DIM1 + z_contrib*BANK_GRID_DIM1*BANK_GRID_DIM2;
+}
+
+static void incrementX(float delta) {
+	morphX = eucmodf(morphX + delta, BANK_GRID_DIM1);
+	lastSelectedId = selectedId = findIDfromMorph();
+}
+static void incrementY(float delta) {
+	morphY = eucmodf(morphY + delta, BANK_GRID_DIM2);
+	lastSelectedId = selectedId = findIDfromMorph();
+}
+static void incrementZ(float delta) {
+	morphZ = eucmodf(morphZ + delta, BANK_GRID_DIM3);
+	lastSelectedId = selectedId = findIDfromMorph();
 }
 
 static void menuKeyCommands() {
@@ -295,18 +317,32 @@ static void menuKeyCommands() {
 				currentPage = IMPORT_PAGE;
 			if (ImGui::IsKeyPressed(SDLK_6))
 				currentPage = DB_PAGE;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))
-				incrementSelectedId(currentPage == GRID_PAGE ? -BANK_GRID_DIM1 : -1);
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))
-				incrementSelectedId(currentPage == GRID_PAGE ? BANK_GRID_DIM1 : 1);
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))
-				incrementSelectedId(-1);
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))
-				incrementSelectedId(1);
-			// if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEUP))
-			// 	incrementSelectedId(currentPage == GRID_PAGE ? -BANK_GRID_DIM1*BANK_GRID_DIM2 : -1);
-			// if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEDOWN))
-			// 	incrementSelectedId(currentPage == GRID_PAGE ? BANK_GRID_DIM1*BANK_GRID_DIM2 : -1);
+
+			if (currentPage == GRID_PAGE){
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))		incrementY(-1.0*morph_step_size);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))		incrementY(morph_step_size);
+
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))		incrementX(-1.0*morph_step_size);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))	incrementX(morph_step_size);
+
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEUP))	incrementZ(-1.0*morph_step_size);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEDOWN))	incrementZ(morph_step_size);
+			}
+			else
+			{
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))
+					incrementSelectedId(-3);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))
+					incrementSelectedId(3);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))
+					incrementSelectedId(-1);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))
+					incrementSelectedId(1);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEUP))
+					incrementSelectedId(-9);
+				if (ImGui::IsKeyPressed(SDL_SCANCODE_PAGEDOWN))
+					incrementSelectedId(9);
+			}
 		}
 	}
 }
@@ -486,6 +522,8 @@ void renderPreview() {
 		ImGui::SliderFloat("##Morph Y", &morphY, 0.0, BANK_GRID_DIM2, "Morph Y: %.3f");
 		ImGui::SameLine();
 		ImGui::SliderFloat("##Morph Z", &morphZ, 0.0, BANK_GRID_DIM3, "Morph Z: %.3f");
+		ImGui::SameLine();
+		ImGui::SliderFloat("##Keyboard step size", &morph_step_size, 0.001, 1.0, "Keyboard Step Size: %.3f");
 	}
 	else {
 		ImGui::SameLine();

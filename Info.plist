@@ -5,17 +5,17 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleName</key>
-	<string>Synthesis Technology WaveEdit</string>
+	<string>SphereEdit</string>
 	<key>CFBundleDisplayName</key>
-	<string>WaveEdit</string>
+	<string>SphereEdit</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.synthtech.waveedit</string>
+	<string>com.fourms.sphereedit</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
 	<string>WAVE</string>
 	<key>CFBundleExecutable</key>
-	<string>WaveEdit</string>
+	<string>SphereEdit</string>
 	<key>CFBundleIconFile</key>
 	<string>logo</string>
 	<key>NSPrincipalClass</key>

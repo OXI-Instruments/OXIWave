@@ -1,6 +1,8 @@
 # SphereEdit
 
-Largely based on Synthesis Technology WaveEdit, the wavetable and bank editor for the Synthesis Technology [E370](http://synthtech.com/eurorack/E370/) and [E352](http://synthtech.com/eurorack/E352/) Eurorack synthesizer modules.
+Modified version of Synthesis Technology WaveEdit, the wavetable and bank editor for the Synthesis Technology [E370](http://synthtech.com/eurorack/E370/) and [E352](http://synthtech.com/eurorack/E352/) Eurorack synthesizer modules.
+
+This version works with wavetables that have three dimensions, each of which wraps. Geometrically, this is a hyperdimensional donut (a 3-torus).
 
 ### Building
 

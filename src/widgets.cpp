@@ -456,7 +456,10 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 	const ImGuiID id = window->GetID(name);
 	ImVec2 padding = style.FramePadding;
 	ImVec2 windowPadding = style.WindowPadding;
-	ImVec2 depthlayerPadding = style.FramePadding * 20;
+
+	//Todo: Setting this to a large value results in dead-space between layers, and incorrect placement of cells.
+	//Lock-out cursor/circle from the dead spaces, and calculate the selectedId
+	ImVec2 layerPadding = ImVec2(style.FramePadding.x * 1, 0);
 
 	float height = ImGui::GetWindowSize().y - windowPadding.y - padding.y;
 	float width = ImGui::CalcItemWidth();
@@ -464,9 +467,10 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 	ImVec2 gridsize = ImVec2(width, height);
 	ImRect gridbox = ImRect(window->DC.CursorPos, window->DC.CursorPos + gridsize);
 
-	ImVec2 cellSize = ImVec2((gridsize.x) / BANK_GRID_DIM1 / BANK_GRID_DIM3, (gridsize.y + padding.y) / BANK_GRID_DIM2);
+	float totalLayerPadding = layerPadding.x * (BANK_GRID_DIM3 - 1);
+	ImVec2 cellSize = ImVec2((gridsize.x - totalLayerPadding) / BANK_GRID_DIM1 / BANK_GRID_DIM3, (gridsize.y + padding.y) / BANK_GRID_DIM2);
+	ImVec2 depthlayerSize = ImVec2((gridsize.x+layerPadding.x) / BANK_GRID_DIM3, gridsize.y + padding.y);
 
-	ImVec2 depthlayerSize = ImVec2(cellSize.x * BANK_GRID_DIM1, cellSize.y * BANK_GRID_DIM2);
 
 	ImGui::ItemSize(gridbox, style.FramePadding.y);
 	if (!ImGui::ItemAdd(gridbox, NULL))
@@ -481,7 +485,7 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		int z = (j / (BANK_GRID_DIM1*BANK_GRID_DIM2))  % BANK_GRID_DIM3;
 
 		// Compute cell gridbox
-		ImVec2 cellPos = ImVec2(gridbox.Min.x + (cellSize.x * x) + (depthlayerSize.x * z), gridbox.Min.y + cellSize.y * y);
+		ImVec2 cellPos = ImVec2(gridbox.Min.x + (cellSize.x * x) + (depthlayerSize.x * z) + padding.x, gridbox.Min.y + cellSize.y * y);
 		ImRect cellBox = ImRect(cellPos, cellPos + cellSize - padding);
 
 		ImU32 col = ImGui::GetColorU32(ImGuiCol_FrameBg);
@@ -512,7 +516,7 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 
 	// Draw gridbox around between "depths"
 	for (int j=0;j<BANK_GRID_DIM3;j++){
-		window->DrawList->AddRect(ImVec2(gridbox.Min.x + j*depthlayerSize.x, gridbox.Min.y), ImVec2(gridbox.Min.x + (j + 1)*depthlayerSize.x - padding.x, gridbox.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
+		window->DrawList->AddRect(ImVec2(gridbox.Min.x + j*depthlayerSize.x, gridbox.Min.y), ImVec2(gridbox.Min.x + (j + 1)*depthlayerSize.x - layerPadding.x, gridbox.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
 	}
 
 	// Window Focus on click
@@ -544,17 +548,14 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		morphPos.z = *morphZ;
 
 		for (int i=0;i<BANK_GRID_DIM3;i++){
-			circlePos[i].x = eucmodf(morphPos.x + 0.5, BANK_GRID_DIM2) + i*BANK_GRID_DIM2;
-			circlePos[i].y = eucmodf(morphPos.y + 0.5, BANK_GRID_DIM1);
-			if (morphPos.z > 2.0 && i==0)
-				circleOpacity[i] = clampf(1.0f - fabs((morphPos.z - 3.0) - (float)i), 0.0f, 1.0f);
-			else
-				circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
 		}
 	}
 
 	// Handle clicks
 	if ((g.ActiveId == id && id && g.IO.MouseDown[0]) || (hovered && g.IO.MouseClicked[1])) {
+		//Todo: account for layerPadding when calculating the clickPos:
+		//Subtract layerPadding * n from the mousePos, where n is the layer clicked floor(mousepos.x / layerSize.x)
+		//Ignore clicks that are in the padding zone
 		clickPos.x = clampf(rescalef(g.IO.MousePos.x, gridbox.Min.x, gridbox.Max.x, 0.0, BANK_GRID_DIM2*BANK_GRID_DIM3), 0, BANK_GRID_DIM2*BANK_GRID_DIM3);
 		clickPos.y = clampf(rescalef(g.IO.MousePos.y, gridbox.Min.y, gridbox.Max.y, 0.0, BANK_GRID_DIM1), 0, BANK_GRID_DIM1);
 
@@ -629,10 +630,18 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 	// Cursor circles
 	if (morphX && morphY && morphZ) {
 		for (int i=0;i<BANK_GRID_DIM3;i++){
+			circlePos[i].x = eucmodf(morphPos.x + 0.5, BANK_GRID_DIM2) + i*BANK_GRID_DIM2;
+			circlePos[i].y = eucmodf(morphPos.y + 0.5, BANK_GRID_DIM1);
+
+			//Todo: account for layerPadding when calculating where the circle is drawn
 			circlePos[i].x = rescalef(circlePos[i].x, 0.0, BANK_GRID_DIM2*BANK_GRID_DIM3, gridbox.Min.x, gridbox.Max.x);
-			circlePos[i].y = rescalef(circlePos[i].y, 0.0, BANK_GRID_DIM1, gridbox.Min.y, gridbox.Max.y);			
-			ImGui::GetWindowDrawList()->AddCircleFilled(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_ResizeGripActive, circleOpacity[i]), 24);
-			ImGui::GetWindowDrawList()->AddCircle(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_ResizeGripActive), 24, 1.0);
+			circlePos[i].y = rescalef(circlePos[i].y, 0.0, BANK_GRID_DIM1, gridbox.Min.y, gridbox.Max.y);		
+
+			if (morphPos.z > 2.0 && i==0)	circleOpacity[i] = clampf(1.0f - fabs((morphPos.z - 3.0) - (float)i), 0.0f, 1.0f);
+			else							circleOpacity[i] = clampf(1.0f - fabs(morphPos.z - (float)i), 0.0f, 1.0f);
+	
+			ImGui::GetWindowDrawList()->AddCircleFilled(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_PlotHistogram, circleOpacity[i]), 24);
+			ImGui::GetWindowDrawList()->AddCircle(circlePos[i], 8.0, ImGui::GetColorU32(ImGuiCol_PlotHistogram), 24, 1.0);
 		}
 	}
 

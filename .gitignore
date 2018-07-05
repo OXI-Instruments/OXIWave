@@ -13,3 +13,9 @@ LOCAL/
 dep/\.DS_Store
 
 \.DS_Store
+
+dist/
+
+autosave\.dat
+
+SphereEdit

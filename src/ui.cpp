@@ -23,9 +23,9 @@
 
 
 static bool showTestWindow = false;
-static ImTextureID logoTextureLight;
-static ImTextureID logoTextureDark;
-static ImTextureID logoTexture;
+// static ImTextureID logoTextureLight;
+// static ImTextureID logoTextureDark;
+// static ImTextureID logoTexture;
 char lastFilename[1024] = "";
 static int styleId = 0;
 int selectedId = 0;
@@ -130,10 +130,6 @@ static void showCurrentBankPage() {
 
 static void menuManual() {
 	openBrowser("manual.pdf");
-}
-
-static void menuWebsite() {
-	openBrowser("http://synthtech.com/waveedit");
 }
 
 static void menuNewBank() {
@@ -406,30 +402,8 @@ void renderWaveMenu() {
 void renderMenu() {
 	menuKeyCommands();
 
-	// HACK
-	// Display a window on top of the menu with the logo, since I'm too lazy to make my own custom MenuImageItem widget
-	{
-		int width, height;
-		getImageSize(logoTexture, &width, &height);
-		ImVec2 padding = ImVec2(8, 4);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0, 0));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, padding);
-		ImGui::SetNextWindowPos(ImVec2(0, 0));
-		ImGui::SetNextWindowSize(ImVec2(width + 2 * padding.x, height + 2 * padding.y));
-		if (ImGui::Begin("Logo", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs)) {
-			ImGui::Image(logoTexture, ImVec2(width, height));
-			ImGui::End();
-		}
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-	}
-
 	// Draw main menu
 	if (ImGui::BeginMenuBar()) {
-		// This will be hidden by the window with the logo
-		if (ImGui::BeginMenu("                        v" TOSTRING(VERSION), false)) {
-			ImGui::EndMenu();
-		}
 		// File
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("New Bank", ImGui::GetIO().OSXBehaviors ? "Cmd+N" : "Ctrl+N"))
@@ -492,8 +466,8 @@ void renderMenu() {
 		if (ImGui::BeginMenu("Help")) {
 			if (ImGui::MenuItem("Manual PDF", "F1", false))
 				menuManual();
-			if (ImGui::MenuItem("Webpage", "", false))
-				menuWebsite();
+			ImGui::MenuItem("-----------", NULL, false, false);
+			ImGui::MenuItem("v" TOSTRING(VERSION), NULL, false, false);
 			// if (ImGui::MenuItem("imgui Demo", NULL, showTestWindow)) showTestWindow = !showTestWindow;
 			ImGui::EndMenu();
 		}
@@ -904,7 +878,7 @@ static void refreshStyle() {
 		style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.7, 0.5, 0.1, 0.5);
 		style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.32f, 0.52f, 0.65f, 1.00f);
 		style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.20f, 0.20f, 0.50f);
-		logoTexture = logoTextureLight;
+		// logoTexture = logoTextureLight;
 	}
 	else if (styleId == 1) {
 		// base16-atelier-dune
@@ -960,7 +934,7 @@ static void refreshStyle() {
 		// style.Colors[ImGuiCol_ColumnActive]         = base[0x2];
 		style.Colors[ImGuiCol_ResizeGrip]           = base[0x2];
 		style.Colors[ImGuiCol_ResizeGripHovered]    = base[0x2];
-		style.Colors[ImGuiCol_ResizeGripActive]     = base[0x2];
+		style.Colors[ImGuiCol_ResizeGripActive]     = base[0x8];
 		style.Colors[ImGuiCol_CloseButton]          = base[0x2];
 		style.Colors[ImGuiCol_CloseButtonHovered]   = base[0x2];
 		style.Colors[ImGuiCol_CloseButtonActive]    = base[0x2];
@@ -970,7 +944,7 @@ static void refreshStyle() {
 		style.Colors[ImGuiCol_PlotHistogramHovered] = alpha(base[0x7], 0.2);
 		style.Colors[ImGuiCol_TextSelectedBg]       = base[0x3];
 		style.Colors[ImGuiCol_ModalWindowDarkening] = alpha(base[0x1], 0.5);
-		logoTexture = logoTextureLight;
+		// logoTexture = logoTextureLight;
 	}
 	else if (styleId == 2) {
 		// base16-atelier-dune
@@ -1025,8 +999,8 @@ static void refreshStyle() {
 		// style.Colors[ImGuiCol_ColumnHovered]        = base[0x2];
 		// style.Colors[ImGuiCol_ColumnActive]         = base[0x2];
 		style.Colors[ImGuiCol_ResizeGrip]           = base[0x2];
-		style.Colors[ImGuiCol_ResizeGripHovered]    = base[0x2];
-		style.Colors[ImGuiCol_ResizeGripActive]     = base[0x2];
+		style.Colors[ImGuiCol_ResizeGripHovered]    = base[0x9];
+		style.Colors[ImGuiCol_ResizeGripActive]     = base[0x9];
 		style.Colors[ImGuiCol_CloseButton]          = base[0x2];
 		style.Colors[ImGuiCol_CloseButtonHovered]   = base[0x2];
 		style.Colors[ImGuiCol_CloseButtonActive]    = base[0x2];
@@ -1036,7 +1010,7 @@ static void refreshStyle() {
 		style.Colors[ImGuiCol_PlotHistogramHovered] = alpha(base[0x5], 0.8);
 		style.Colors[ImGuiCol_TextSelectedBg]       = base[0x3];
 		style.Colors[ImGuiCol_ModalWindowDarkening] = alpha(base[0x2], 0.5);
-		logoTexture = logoTextureDark;
+		// logoTexture = logoTextureDark;
 	}
 	else if (styleId == 3) {
 		// base16-ashes
@@ -1091,8 +1065,8 @@ static void refreshStyle() {
 		// style.Colors[ImGuiCol_ColumnHovered]        = base[0x2];
 		// style.Colors[ImGuiCol_ColumnActive]         = base[0x2];
 		style.Colors[ImGuiCol_ResizeGrip]           = base[0x2];
-		style.Colors[ImGuiCol_ResizeGripHovered]    = base[0x2];
-		style.Colors[ImGuiCol_ResizeGripActive]     = base[0x2];
+		style.Colors[ImGuiCol_ResizeGripHovered]    = base[0xd];
+		style.Colors[ImGuiCol_ResizeGripActive]     = base[0xd];
 		style.Colors[ImGuiCol_CloseButton]          = base[0x2];
 		style.Colors[ImGuiCol_CloseButtonHovered]   = base[0x2];
 		style.Colors[ImGuiCol_CloseButtonActive]    = base[0x2];
@@ -1102,7 +1076,7 @@ static void refreshStyle() {
 		style.Colors[ImGuiCol_PlotHistogramHovered] = alpha(base[0xc], 0.8);
 		style.Colors[ImGuiCol_TextSelectedBg]       = base[0x3];
 		style.Colors[ImGuiCol_ModalWindowDarkening] = alpha(base[0x2], 0.5);
-		logoTexture = logoTextureDark;
+		// logoTexture = logoTextureDark;
 	}
 }
 
@@ -1113,8 +1087,8 @@ void uiInit() {
 
 	// Load fonts
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("fonts/Lekton-Regular.ttf", 15.0);
-	logoTextureLight = loadImage("logo-light.png");
-	logoTextureDark = loadImage("logo-dark.png");
+	// logoTextureLight = loadImage("logo-light.png");
+	// logoTextureDark = loadImage("logo-dark.png");
 
 	// Load UI settings
 	// If this gets any more complicated, it should be JSON.

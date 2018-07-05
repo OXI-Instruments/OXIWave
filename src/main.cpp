@@ -109,10 +109,10 @@ int main(int argc, char **argv) {
 			snprintf(lastBasename, sizeof(lastBasename), "%s", lastFilename);
 			lastBasenameP = basename(lastBasename);
 #endif
-			snprintf(newTitle, sizeof(newTitle), "Synthesis Technology WaveEdit - %s", lastBasenameP);
+			snprintf(newTitle, sizeof(newTitle), "SphereEdit - %s", lastBasenameP);
 		}
 		else {
-			snprintf(newTitle, sizeof(newTitle), "Synthesis Technology WaveEdit");
+			snprintf(newTitle, sizeof(newTitle), "SphereEdit");
 		}
 		if (strcmp(title, newTitle) != 0) {
 			SDL_SetWindowTitle(window, newTitle);

@@ -22,7 +22,7 @@ Compile the program. The Makefile will automatically detect your operating syste
 
 Launch the program.
 
-	./WaveEdit
+	./ShpereEdit
 
 You can even try your luck with building the polished distributable. Although this method is unsupported, it may work with some tweaks to the Makefile.
 

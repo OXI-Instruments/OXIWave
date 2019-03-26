@@ -1,3 +1,4 @@
+ui.dat
 *.o
 dep/bin/
 dep/include/

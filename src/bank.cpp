@@ -51,7 +51,7 @@ void Bank::duplicateToAll(int waveId) {
 	}
 }
 
-
+/* Save autosave data */
 void Bank::save(const char *filename) {
 	FILE *f = fopen(filename, "wb");
 	if (!f)
@@ -60,7 +60,7 @@ void Bank::save(const char *filename) {
 	fclose(f);
 }
 
-
+/* Load autosave data */
 void Bank::load(const char *filename) {
 	clear();
 
@@ -118,6 +118,35 @@ void Bank::saveWaves(const char *dirname) {
 		waves[b].saveWAV(filename);
 	}
 }
+
+void Bank::loadWaves(const char *dirname) {
+	for (int b = 0; b < BANK_LEN; b++) {
+		char filename[1024];
+		snprintf(filename, sizeof(filename), "%s/%02d.wav", dirname, b);
+
+		waves[b].loadWAV(filename);
+	}
+}
+
+
+void Bank::loadMultiWAVs(const char *filename) {
+	clear();
+
+	SF_INFO info;
+	SNDFILE *sf = sf_open(filename, SFM_READ, &info);
+	if (!sf)
+		return;
+
+	for (int i = 0; i < BANK_LEN; i++) {
+		sf_read_float(sf, waves[i].samples, WAVE_LEN);
+		waves[i].commitSamples();
+		//Skip next 7 repititions
+		sf_seek(sf, WAVE_LEN * 7, SEEK_CUR);
+	}
+
+	sf_close(sf);
+}
+
 
 
 void Bank::exportMultiWAVs(const char *filename) {

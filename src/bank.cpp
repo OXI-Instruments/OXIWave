@@ -118,3 +118,22 @@ void Bank::saveWaves(const char *dirname) {
 		waves[b].saveWAV(filename);
 	}
 }
+
+
+void Bank::exportMultiWAVs(const char *filename) {
+	SF_INFO info;
+	info.samplerate = 44100;
+	info.channels = 1;
+	info.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 | SF_ENDIAN_LITTLE;
+	SNDFILE *sf = sf_open(filename, SFM_WRITE, &info);
+	if (!sf)
+		return;
+
+	for (int j = 0; j < BANK_LEN; j++) {
+		for (int k = 0; k < 8; k++) 
+			sf_write_float(sf, waves[j].postSamples, WAVE_LEN);
+	}
+
+	sf_close(sf);
+}
+

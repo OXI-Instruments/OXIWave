@@ -176,6 +176,17 @@ static void menuSaveBankAs() {
 	free(dir);
 }
 
+static void menuExportBank() {
+	char *dir = getLastDir();
+	char *path = osdialog_file(OSDIALOG_SAVE, dir, "BankExport.wav", NULL);
+	if (path) {
+		currentBank.exportMultiWAVs(path);
+		free(path);
+	}
+	free(dir);
+}
+
+
 static void menuSaveBank() {
 	if (lastFilename[0] != '\0')
 		currentBank.saveWAV(lastFilename);
@@ -416,6 +427,9 @@ void renderMenu() {
 				menuSaveBankAs();
 			if (ImGui::MenuItem("Save Waves to Folder...", NULL))
 				menuSaveWaves();
+			ImGui::MenuItem("##spacer", NULL, false, false);
+			if (ImGui::MenuItem("Export Bank for SWN...", ImGui::GetIO().OSXBehaviors ? "Cmd+Shift+E" : "Ctrl+Shift+E"))
+				menuExportBank();
 			if (ImGui::MenuItem("Quit", ImGui::GetIO().OSXBehaviors ? "Cmd+Q" : "Ctrl+Q"))
 				menuQuit();
 

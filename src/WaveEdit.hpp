@@ -207,6 +207,8 @@ struct Bank {
 	void loadWAV(const char *filename);
 	/** Saves each wave to its own file in a directory */
 	void saveWaves(const char *dirname);
+	/** WAV file with each WAV in the bank repeated 8 times **/
+	void exportMultiWAVs(const char *filename);
 };
 
 

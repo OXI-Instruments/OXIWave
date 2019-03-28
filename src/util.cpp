@@ -89,7 +89,19 @@ void ellipsize(char *str, int maxLen) {
 	}
 }
 
+bool str_ends_with(char *str, const char *ending) {
+	int len = strlen(str);
+	int len_end = strlen(ending);
 
+	if (len<len_end)
+		return false;
+
+	for (int i=0; i<len_end; i++) {
+		if (toupper(str[len-len_end+i]) != toupper(ending[i]))
+			return false;
+	}
+	return true;
+}
 
 
 /* This base64 implementation:

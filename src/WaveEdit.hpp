@@ -120,7 +120,7 @@ std::string stringf(const char *format, ...);
 void ellipsize(char *str, int maxLen);
 unsigned char *base64_encode(const unsigned char *src, size_t len, size_t *out_len);
 unsigned char *base64_decode(const unsigned char *src, size_t len, size_t *out_len);
-
+bool str_ends_with(char *str, const char *ending);
 
 ////////////////////
 // wave.cpp
@@ -202,7 +202,7 @@ struct Bank {
 	/** Binary dump of the bank struct */
 	void save(const char *filename);
 	void load(const char *filename);
-	/** WAV file with BANK_LEN * WAVE_LEN samples */
+	/** WAV file with BANK_LEN * WAVE_LEN samples: not used in SphereEdit*/
 	void saveWAV(const char *filename);
 	void loadWAV(const char *filename);
 	/** Saves/Loads each wave to its own file in a directory */

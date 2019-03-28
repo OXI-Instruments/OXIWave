@@ -129,7 +129,7 @@ static void showCurrentBankPage() {
 }
 
 static void menuManual() {
-	openBrowser("manual.pdf");
+	openBrowser("SphereEdit_manual.pdf");
 }
 
 static void menuNewBank() {
@@ -152,36 +152,17 @@ static char *getLastDir() {
 	}
 }
 
-static void menuOpenBank() {
+static void menuOpenSphere() {
 	char *dir = getLastDir();
 	char *path = osdialog_file(OSDIALOG_OPEN, dir, NULL, NULL);
 	if (path) {
 		showCurrentBankPage();
-		//currentBank.loadWAV(path);
 		currentBank.loadMultiWAVs(path);
 		snprintf(lastFilename, sizeof(lastFilename), "%s", path);
 		historyPush();
 		free(path);
 	}
 	free(dir);
-}
-
-static void menuSaveBankAs() {
-	char *dir = getLastDir();
-	char *path = osdialog_file(OSDIALOG_SAVE, dir, "Untitled.wav", NULL);
-	if (path) {
-		currentBank.saveWAV(path);
-		snprintf(lastFilename, sizeof(lastFilename), "%s", path);
-		free(path);
-	}
-	free(dir);
-}
-
-static void menuSaveBank() {
-	if (lastFilename[0] != '\0')
-		currentBank.saveWAV(lastFilename);
-	else
-		menuSaveBankAs();
 }
 
 static void menuSaveSphereAs() {
@@ -196,7 +177,7 @@ static void menuSaveSphereAs() {
 }
 
 static void menuSaveSphere() {
-	if (lastFilename[0] != '\0')
+	if (str_ends_with(lastFilename, ".wav")) 
 		currentBank.exportMultiWAVs(lastFilename);
 	else
 		menuSaveSphereAs();
@@ -297,7 +278,7 @@ static void menuKeyCommands() {
 		if (ImGui::IsKeyPressed(SDLK_n) && !io.KeyShift && !io.KeyAlt)
 			menuNewBank();
 		if (ImGui::IsKeyPressed(SDLK_o) && !io.KeyShift && !io.KeyAlt)
-			menuOpenBank();
+			menuOpenSphere();
 		if (ImGui::IsKeyPressed(SDLK_s) && !io.KeyShift && !io.KeyAlt)
 			menuSaveSphere();
 		if (ImGui::IsKeyPressed(SDLK_s) && io.KeyShift && !io.KeyAlt)
@@ -440,16 +421,11 @@ void renderMenu() {
 			if (ImGui::MenuItem("New Sphere", ImGui::GetIO().OSXBehaviors ? "Cmd+N" : "Ctrl+N"))
 				menuNewBank();
 			if (ImGui::MenuItem("Open Sphere...", ImGui::GetIO().OSXBehaviors ? "Cmd+O" : "Ctrl+O"))
-				menuOpenBank();
+				menuOpenSphere();
 			if (ImGui::MenuItem("Save Sphere", ImGui::GetIO().OSXBehaviors ? "Cmd+S" : "Ctrl+S"))
 				menuSaveSphere();
 			if (ImGui::MenuItem("Save Sphere As...", ImGui::GetIO().OSXBehaviors ? "Cmd+Shift+S" : "Ctrl+Shift+S"))
 				menuSaveSphereAs();
-
-		// if (ImGui::MenuItem("Save Bank", ImGui::GetIO().OSXBehaviors ? "Cmd+S" : "Ctrl+S"))
-			// 	menuSaveBank();
-		// if (ImGui::MenuItem("Save Bank As...", ImGui::GetIO().OSXBehaviors ? "Cmd+Shift+S" : "Ctrl+Shift+S"))
-			// 	menuSaveBankAs();
 
 			ImGui::MenuItem("##spacer", NULL, false, false);
 			if (ImGui::MenuItem("Save Waves to Folder...", NULL))

@@ -1,5 +1,5 @@
 #!/bin/bash 
-mkdir logo.iconset
+mkdir -p logo.iconset
 cd logo.iconset
 convert -resize 16x16 ../logo.png icon_16x16.png
 convert -resize 32x32 ../logo.png icon_16x16@2x.png
@@ -13,3 +13,4 @@ convert -resize 512x512 ../logo.png icon_512x512.png
 convert -resize 1024x1024 ../logo.png icon_512x512@2x.png
 cd ..
 iconutil -c icns logo.iconset
+cp logo.icns ../logo.icns

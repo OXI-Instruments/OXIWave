@@ -80,7 +80,8 @@ dist: SphereEdit
 	mkdir -p dist/SphereEdit
 	cp -R banks dist/SphereEdit
 	cp LICENSE* dist/SphereEdit
-	cp doc/manual.pdf dist/SphereEdit
+	cp doc/manual.pdf dist/SphereEdit/WaveEdit_manual.pdf
+	cp doc/SphereEdit_manual.pdf dist/SphereEdit
 ifeq ($(ARCH),lin)
 	cp -R logo*.png fonts catalog dist/SphereEdit
 	cp SphereEdit SphereEdit.sh dist/SphereEdit
@@ -94,7 +95,8 @@ else ifeq ($(ARCH),mac)
 	mkdir -p dist/SphereEdit/SphereEdit.app/Contents/Resources
 	cp Info.plist dist/SphereEdit/SphereEdit.app/Contents
 	cp SphereEdit dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	cp -R logo*.png logo.icns fonts catalog dist/SphereEdit/SphereEdit.app/Contents/Resources
+	cp iconset/logo*.png dist/SphereEdit/SphereEdit.app/Contents/Resources
+	cp -R logo.icns fonts catalog dist/SphereEdit/SphereEdit.app/Contents/Resources
 	# Remap dylibs in executable
 	otool -L dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
 	cp dep/lib/libSDL2-2.0.0.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS

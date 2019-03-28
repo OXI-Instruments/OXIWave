@@ -1,4 +1,4 @@
-ui.dat
+*.dat
 *.o
 dep/bin/
 dep/include/
@@ -10,13 +10,8 @@ dep/jansson*
 dep/libsamplerate*
 dep/libsndfile*
 LOCAL/
-
 dep/\.DS_Store
-
 \.DS_Store
-
 dist/
-
-autosave\.dat
 
 SphereEdit

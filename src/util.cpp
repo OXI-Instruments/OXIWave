@@ -8,6 +8,7 @@
 #include <shellapi.h>
 #endif
 
+//Todo: Display error if file not found
 void openBrowser(const char *url) {
 	// shell injection is possible if the URL is not trusted
 #if defined(__linux__)
@@ -17,7 +18,9 @@ void openBrowser(const char *url) {
 #endif
 #if defined(__APPLE__)
 	char command[1024];
-	snprintf(command, sizeof(command), "open %s", url);
+	// From command-line (not the dist):
+	// snprintf(command, sizeof(command), "open doc/%s", url);
+	snprintf(command, sizeof(command), "open ../../../%s", url);
 	system(command);
 #endif
 #if defined(_WIN32)

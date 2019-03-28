@@ -18,6 +18,10 @@
 	<string>SphereEdit</string>
 	<key>CFBundleIconFile</key>
 	<string>logo</string>
+	<key>CFBundleVersion</key>
+	<string>0.9</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.9</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSHighResolutionCapable</key>

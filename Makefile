@@ -1,4 +1,4 @@
-VERSION = 0.8
+VERSION = 0.9
 
 FLAGS = -Wall -Wextra -Wno-unused-parameter -g -Wno-unused -O3 -march=nocona -ffast-math \
 	-DVERSION=$(VERSION) -DPFFFT_SIMD_DISABLE \
@@ -78,7 +78,7 @@ clean:
 .PHONY: dist
 dist: SphereEdit
 	mkdir -p dist/SphereEdit
-	cp -R banks dist/SphereEdit
+	cp -R spheres dist/SphereEdit
 	cp LICENSE* dist/SphereEdit
 	cp doc/manual.pdf dist/SphereEdit/WaveEdit_manual.pdf
 	cp doc/SphereEdit_manual.pdf dist/SphereEdit

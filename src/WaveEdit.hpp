@@ -335,3 +335,9 @@ void dbPage();
 ////////////////////
 
 void importPage();
+
+////////////////////
+// playexport.cpp
+////////////////////
+void startPlayExport(void);
+void stopPlayExport(void);

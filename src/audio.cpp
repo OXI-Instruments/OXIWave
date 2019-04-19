@@ -2,6 +2,8 @@
 #include <SDL.h>
 #include <samplerate.h>
 
+extern int playExportPosition;
+extern bool playExport;
 
 float playVolume = -12.0;
 float playFrequency = 220.0;
@@ -25,6 +27,7 @@ static SDL_AudioDeviceID audioDevice = 0;
 static SDL_AudioSpec audioSpec;
 static SRC_STATE *audioSrc = NULL;
 
+
 long srcCallback(void *cb_data, float **data) {
 	float gain = powf(10.0, playVolume / 20.0);
 	// Generate next samples
@@ -32,11 +35,6 @@ long srcCallback(void *cb_data, float **data) {
 	static float in[inLen];
 	for (int i = 0; i < inLen; i++) {
 		if (morphInterpolate) {
-			// const float lambdaMorph = fminf(0.1 / playFrequency, 0.5);
-			// morphXSmooth = crossf(morphXSmooth, eucmodf(morphX, BANK_GRID_DIM1-0.000001), lambdaMorph);
-			// morphYSmooth = crossf(morphYSmooth, eucmodf(morphY, BANK_GRID_DIM2-0.000001), lambdaMorph);
-			// morphZSmooth = crossf(morphZSmooth, eucmodf(morphZ, BANK_GRID_DIM3-0.000001), lambdaMorph);
-			// browseSmooth = crossf(browseSmooth, clampf(browse, 0.0, BANK_LEN - 1), lambdaMorph);
 			morphXSmooth = eucmodf(morphX, BANK_GRID_DIM1-0.000001);
 			morphYSmooth = eucmodf(morphY, BANK_GRID_DIM2-0.000001);
 			morphZSmooth = eucmodf(morphZ, BANK_GRID_DIM3-0.000001);
@@ -51,7 +49,7 @@ long srcCallback(void *cb_data, float **data) {
 		}
 
 		int index = (playIndex + i) % WAVE_LEN;
-		if (playModeXY) {
+		if (playModeXY && !playExport) {
 
 			// Morph XYZ
 			int xi = morphXSmooth;
@@ -95,6 +93,9 @@ long srcCallback(void *cb_data, float **data) {
 
 			in[i] = crossf(z0, z1, zf);
 		}
+		else if (playExportPosition < 0) {
+			in[i] = 0;
+		}
 		else {
 			// Morph Z
 			int zi = browseSmooth;
@@ -119,7 +120,23 @@ void audioCallback(void *userdata, Uint8 *stream, int len) {
 	float *out = (float *) stream;
 	int outLen = len / sizeof(float);
 
-	if (playEnabled) {
+	if (playExport) {
+		double ratio = (double)audioSpec.freq / WAVE_LEN / playFrequencySmooth;
+		src_callback_read(audioSrc, ratio, outLen, out);
+
+		if (playExportPosition < 0) {
+			playExportPosition++;
+			playIndex = 0;
+		} else {
+			playExportPosition += audioSpec.samples / WAVE_LEN;
+			if ((playExportPosition & 7) == 0)
+				browse += 1.0;
+
+			if (browse >= 27.0)
+				stopPlayExport();
+		}
+	}
+	else if (playEnabled) {
 		// Apply exponential smoothing to frequency
 		const float lambdaFrequency = 0.5;
 		playFrequency = clampf(playFrequency, 1.0, 10000.0);

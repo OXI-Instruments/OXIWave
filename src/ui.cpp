@@ -23,6 +23,7 @@
 
 
 static bool showTestWindow = false;
+static bool showAbout = false;
 // static ImTextureID logoTextureLight;
 // static ImTextureID logoTextureDark;
 // static ImTextureID logoTexture;
@@ -474,6 +475,8 @@ void renderMenu() {
 		}
 		// Help
 		if (ImGui::BeginMenu("Help")) {
+			if (ImGui::MenuItem("About SphereEdit", NULL, false)) 
+				showAbout = true;
 			if (ImGui::MenuItem("Manual PDF", "F1", false))
 				menuManual();
 			ImGui::MenuItem("-----------", NULL, false, false);
@@ -488,12 +491,15 @@ void renderMenu() {
 
 void renderPreview() {
 	ImGui::Checkbox("Play", &playEnabled);
+
 	ImGui::SameLine();
 	ImGui::PushItemWidth(300.0);
 	ImGui::SliderFloat("##playVolume", &playVolume, -60.0f, 0.0f, "Volume: %.2f dB");
+
 	ImGui::PushItemWidth(-1.0);
 	ImGui::SameLine();
 	ImGui::SliderFloat("##playFrequency", &playFrequency, 1.0f, 10000.0f, "Frequency: %.2f Hz", 0.0f);
+
 
 	ImGui::Checkbox("Morph Interpolate", &morphInterpolate);
 	if (playModeXY) {
@@ -808,19 +814,25 @@ void renderMain() {
 			static int hoveredTab = 0;
 			ImGui::TabLabels(NUM_PAGES, tabLabels, (int*)&currentPage, NULL, false, &hoveredTab);
 		}
+		ImGui::SameLine();
+		ImGui::PushItemWidth(-1.0);
+		if (ImGui::Button("Export to SWN")) {
+			startPlayExport();
+		}
+
 
 		// Page
 		// Reset some audio variables. These might be changed within the pages.
 		playModeXY = false;
 		playingBank = &currentBank;
 		switch (currentPage) {
-		case EDITOR_PAGE: editorPage(); break;
-		case EFFECT_PAGE: effectPage(); break;
-		case GRID_PAGE: gridPage(); break;
-		case WATERFALL_PAGE: waterfallPage(); break;
-		case IMPORT_PAGE: importPage(); break;
-		// case DB_PAGE: dbPage(); break;
-		default: break;
+			case EDITOR_PAGE: editorPage(); break;
+			case EFFECT_PAGE: effectPage(); break;
+			case GRID_PAGE: gridPage(); break;
+			case WATERFALL_PAGE: waterfallPage(); break;
+			case IMPORT_PAGE: importPage(); break;
+			// case DB_PAGE: dbPage(); break;
+			default: break;
 		}
 	}
 	ImGui::End();
@@ -830,6 +842,38 @@ void renderMain() {
 		// float col;
 		// ImGui::ColorEdit4("My Color", (float*)&col); 
 	}
+
+	if (showAbout) {
+		showAbout = false;
+		ImGui::OpenPopup("About");
+	}
+
+   if(ImGui::BeginPopupModal("About", NULL, ImGuiWindowFlags_NoResize))
+    // if(ImGui::BeginPopup("About"))
+    {
+    	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+    	ImFont* font = atlas->Fonts[1];
+    	ImGui::PushFont(font);
+        ImGui::Text("SphereEdit");
+        ImGui::Text("");
+		ImGui::PopFont();
+
+        ImGui::Text("SphereEdit is an open-source wavetable editor for the Spherical Wavetable Navigator from 4ms Company. It was developed by Dan Green. Source code can be found at https://github.com/danngreen/SphereEdit");
+        ImGui::Text("");
+
+      	ImGui::Text("SphereEdit is based on WaveEdit, a cross-platform (Mac/Windows/Linux) wavetable and bank editor designed for the Synthesis Technology (http://synthtech.com/) E370 Quad Morphing VCO and E352 Cloud Terrarium VCO Eurorack synthesizer modules.");
+		ImGui::Text("WaveEdit was developed by Andrew Belt for Synthesis Technology as a stretch goal of the E370 Kickstarter, and is available for free download at http://synthtech.com/waveedit");
+        ImGui::Text("");
+
+        ImGui::Text("Much thanks to Andrew Belt and Synthesis Technology!");
+
+        ImGui::Text("");
+
+        if(ImGui::Button("OK"))
+        	ImGui::CloseCurrentPopup();
+
+        ImGui::EndPopup();
+    }
 }
 
 
@@ -845,8 +889,8 @@ static void refreshStyle() {
 	style.GrabRounding = 2.f;
 	style.ChildWindowRounding = 2.f;
 	style.ScrollbarRounding = 2.f;
-	style.FrameRounding = 6.f;
-	style.ItemSpacing = ImVec2(8.0f, 9.0f);
+	style.FrameRounding = 4.f;
+	style.ItemSpacing = ImVec2(10.0f, 10.0f);
 	style.FramePadding = ImVec2(6.0f, 4.0f);
 
 	if (styleId == 0) {
@@ -1143,6 +1187,7 @@ void uiInit() {
 
 	// Load fonts
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 16.0);
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 24.0);
 	// logoTextureLight = loadImage("logo-light.png");
 	// logoTextureDark = loadImage("logo-dark.png");
 

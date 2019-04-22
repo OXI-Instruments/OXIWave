@@ -497,6 +497,9 @@ void renderPreview() {
 	ImGui::Checkbox("Play", &playEnabled);
 
 	ImGui::SameLine();
+	if (ImGui::Button("Play into SWN"))	startPlayExport();
+
+	ImGui::SameLine();
 	ImGui::PushItemWidth(300.0);
 	ImGui::SliderFloat("##playVolume", &playVolume, -60.0f, 0.0f, "Volume: %.2f dB");
 
@@ -511,11 +514,11 @@ void renderPreview() {
 		ImGui::PushItemWidth(-1.0);
 		float width = ImGui::CalcItemWidth() / 4.0 - ImGui::GetStyle().FramePadding.y;
 		ImGui::PushItemWidth(width);
-		ImGui::SliderFloat("##Morph X", &morphX, 0.0, BANK_GRID_DIM1, "Morph X: %.3f");
+		ImGui::SliderFloat("##Depth", &morphX, 0.0, BANK_GRID_DIM1, "Depth: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Morph Y", &morphY, 0.0, BANK_GRID_DIM2, "Morph Y: %.3f");
+		ImGui::SliderFloat("##Latitude", &morphY, 0.0, BANK_GRID_DIM2, "Latitude: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Morph Z", &morphZ, 0.0, BANK_GRID_DIM3, "Morph Z: %.3f");
+		ImGui::SliderFloat("##Longitude", &morphZ, 0.0, BANK_GRID_DIM3, "Longitude: %.3f");
 		ImGui::SameLine();
 		ImGui::SliderFloat("##Keyboard step size", &morph_step_size, 0.001, 1.0, "Keyboard Step Size: %.3f");
 	}
@@ -570,12 +573,12 @@ void editorPage() {
 	ImGui::EndChild();
 
 	ImGui::SameLine();
-	ImGui::BeginChild("Editor", ImVec2(0, 0), true);
+
+	ImGui::BeginGroup();
 	{
+
 		Wave *wave = &currentBank.waves[selectedId];
 		float *effects = wave->effects;
-
-		ImGui::PushItemWidth(-1);
 
 		static enum Tool tool = PENCIL_TOOL;
 		renderToolSelector(&tool);
@@ -609,57 +612,64 @@ void editorPage() {
 		}
 		ImGui::PopStyleVar(1);
 
-		// ImGui::SameLine();
-		// if (ImGui::RadioButton("Smooth", tool == SMOOTH_TOOL)) tool = SMOOTH_TOOL;
+		ImGui::BeginChild("Editor", ImVec2(0, 0), true);
+		{
 
-		ImGui::Text("Waveform");
-		const int oversample = 4;
-		float waveOversample[WAVE_LEN * oversample];
-		cyclicOversample(wave->postSamples, waveOversample, WAVE_LEN, oversample);
-		if (renderWave("WaveEditor", 200.0, wave->samples, WAVE_LEN, waveOversample, WAVE_LEN * oversample, tool)) {
-			currentBank.waves[selectedId].commitSamples();
-			historyPush();
-		}
+			ImGui::PushItemWidth(-1);
 
-		ImGui::Text("Harmonics");
-		if (renderHistogram("HarmonicEditor", 200.0, wave->harmonics, WAVE_LEN / 2, wave->postHarmonics, WAVE_LEN / 2, tool)) {
-			currentBank.waves[selectedId].commitHarmonics();
-			historyPush();
-		}
+			// ImGui::SameLine();
+			// if (ImGui::RadioButton("Smooth", tool == SMOOTH_TOOL)) tool = SMOOTH_TOOL;
 
-		ImGui::Text("Effects");
-		for (int i = 0; i < EFFECTS_LEN; i++) {
-			effectSlider((EffectID) i);
-		}
+			ImGui::Text("Waveform");
+			const int oversample = 4;
+			float waveOversample[WAVE_LEN * oversample];
+			cyclicOversample(wave->postSamples, waveOversample, WAVE_LEN, oversample);
+			if (renderWave("WaveEditor", 200.0, wave->samples, WAVE_LEN, waveOversample, WAVE_LEN * oversample, tool)) {
+				currentBank.waves[selectedId].commitSamples();
+				historyPush();
+			}
 
-		if (ImGui::Checkbox("Cycle", &currentBank.waves[selectedId].cycle)) {
-			currentBank.waves[selectedId].updatePost();
-			historyPush();
-		}
-		ImGui::SameLine();
-		if (ImGui::Checkbox("Normalize", &currentBank.waves[selectedId].normalize)) {
-			currentBank.waves[selectedId].updatePost();
-			historyPush();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Randomize")) {
-			currentBank.waves[selectedId].randomizeEffects();
-			historyPush();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Reset")) {
-			currentBank.waves[selectedId].clearEffects();
-			historyPush();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Bake")) {
-			currentBank.waves[selectedId].bakeEffects();
-			historyPush();
-		}
+			ImGui::Text("Harmonics");
+			if (renderHistogram("HarmonicEditor", 200.0, wave->harmonics, WAVE_LEN / 2, wave->postHarmonics, WAVE_LEN / 2, tool)) {
+				currentBank.waves[selectedId].commitHarmonics();
+				historyPush();
+			}
 
-		ImGui::PopItemWidth();
+			ImGui::Text("Effects");
+			for (int i = 0; i < EFFECTS_LEN; i++) {
+				effectSlider((EffectID) i);
+			}
+
+			if (ImGui::Checkbox("Cycle", &currentBank.waves[selectedId].cycle)) {
+				currentBank.waves[selectedId].updatePost();
+				historyPush();
+			}
+			ImGui::SameLine();
+			if (ImGui::Checkbox("Normalize", &currentBank.waves[selectedId].normalize)) {
+				currentBank.waves[selectedId].updatePost();
+				historyPush();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Randomize")) {
+				currentBank.waves[selectedId].randomizeEffects();
+				historyPush();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reset")) {
+				currentBank.waves[selectedId].clearEffects();
+				historyPush();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Bake")) {
+				currentBank.waves[selectedId].bakeEffects();
+				historyPush();
+			}
+
+			ImGui::PopItemWidth();
+		}
+		ImGui::EndChild();
 	}
-	ImGui::EndChild();
+	ImGui::EndGroup();
 }
 
 
@@ -709,9 +719,10 @@ void effectHistogram(EffectID effect, Tool tool) {
 
 
 void effectPage() {
+	static Tool tool = PENCIL_TOOL;
+	renderToolSelector(&tool);
+
 	ImGui::BeginChild("Effect Editor", ImVec2(0, 0), true); {
-		static Tool tool = PENCIL_TOOL;
-		renderToolSelector(&tool);
 
 		ImGui::PushItemWidth(-1);
 		for (int i = 0; i < EFFECTS_LEN; i++) {
@@ -812,23 +823,19 @@ void renderMain() {
 		// Menu bar
 		renderMenu();
 		renderPreview();
+
 		// Tab bar
 		{
 			static const char *tabLabels[NUM_PAGES] = {
 				"Waveform Editor",
 				"Effect Editor",
-				"Grid XYZ View",
+				"Grid View",
 				"Waterfall View",
 				"Import"
 //				"WaveEdit Online"
 			};
 			static int hoveredTab = 0;
 			ImGui::TabLabels(NUM_PAGES, tabLabels, (int*)&currentPage, NULL, false, &hoveredTab);
-		}
-		ImGui::SameLine();
-		ImGui::PushItemWidth(-1.0);
-		if (ImGui::Button("Play into SWN")) {
-			startPlayExport();
 		}
 
 

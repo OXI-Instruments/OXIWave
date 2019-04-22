@@ -514,9 +514,12 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		ImGui::PopClipRect();
 	}
 
-	// Draw gridbox around between "depths"
+	// Draw gridbox around "depths"
 	for (int j=0;j<BANK_GRID_DIM3;j++){
-		window->DrawList->AddRect(ImVec2(gridbox.Min.x + j*depthlayerSize.x, gridbox.Min.y), ImVec2(gridbox.Min.x + (j + 1)*depthlayerSize.x - layerPadding.x, gridbox.Min.y + depthlayerSize.y - padding.y), ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
+		window->DrawList->AddRect(\
+			ImVec2(gridbox.Min.x + j*depthlayerSize.x, gridbox.Min.y), \
+			ImVec2(gridbox.Min.x + (j + 1)*depthlayerSize.x - layerPadding.x, gridbox.Min.y + depthlayerSize.y - padding.y), \
+			ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f, 0b1111, style.FramePadding.x/2);
 	}
 
 	// Window Focus on click
@@ -546,9 +549,6 @@ void renderBankCube(const char *name, float *morphX, float *morphY, float *morph
 		morphPos.x = *morphX;
 		morphPos.y = *morphY;
 		morphPos.z = *morphZ;
-
-		for (int i=0;i<BANK_GRID_DIM3;i++){
-		}
 	}
 
 	// Handle clicks

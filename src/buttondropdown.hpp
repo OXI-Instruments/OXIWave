@@ -19,18 +19,9 @@ IMGUI_API bool BeginButtonDropDown(const char* label, ImVec2 buttonSize)
 
     ImVec2 size(buttonSize.x + 20, buttonSize.y);
 
-    //dependancy-free strcat()
-    char label_a[255];
-    int i=0;
-    while (label[i]) {label_a[i] = label[i]; i++;}
-    label_a[i++]=' ';
-    label_a[i++]='#';
-    label_a[i++]='#';
-    label_a[i++]=0;
-
     ImGui::Dummy(ImVec2(00.0f,0.0f));   
     ImGui::SameLine();
-    bool pressed = ImGui::Button(label_a, size);
+    bool pressed = ImGui::Button(label, size);
 
     // Arrow
     ImVec2 center(window->Pos.x + buttonSize.x + x + 20, window->Pos.y + y + buttonSize.y / 2);
@@ -53,10 +44,10 @@ IMGUI_API bool BeginButtonDropDown(const char* label, ImVec2 buttonSize)
 
     if (pressed)
     {
-        ImGui::OpenPopup(label_a);
+        ImGui::OpenPopup(label);
     }
 
-    if (ImGui::BeginPopup(label_a))
+    if (ImGui::BeginPopup(label))
     {
         ImGui::PushStyleColor(ImGuiCol_FrameBg, style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(ImGuiCol_WindowBg, style.Colors[ImGuiCol_Button]);

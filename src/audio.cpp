@@ -49,8 +49,11 @@ long srcCallback(void *cb_data, float **data) {
 		}
 
 		int index = (playIndex + i) % WAVE_LEN;
-		if (playModeXY && !playExport) {
 
+		if ((!playExport && !playEnabled) || (playExportPosition < 0)) {
+			in[i] = 0;
+		}
+		else if (playModeXY && !playExport) {
 			// Morph XYZ
 			int xi = morphXSmooth;
 			float xf = morphXSmooth - xi;
@@ -93,9 +96,6 @@ long srcCallback(void *cb_data, float **data) {
 
 			in[i] = crossf(z0, z1, zf);
 		}
-		else if (playExportPosition < 0) {
-			in[i] = 0;
-		}
 		else {
 			// Morph Z
 			int zi = browseSmooth;
@@ -105,6 +105,7 @@ long srcCallback(void *cb_data, float **data) {
 				playingBank->waves[eucmodi(zi + 1, BANK_LEN)].postSamples[index],
 				zf);
 		}
+
 		in[i] = clampf(in[i] * gain, -1.0, 1.0);
 	}
 
@@ -136,17 +137,19 @@ void audioCallback(void *userdata, Uint8 *stream, int len) {
 				stopPlayExport();
 		}
 	}
-	else if (playEnabled) {
-		// Apply exponential smoothing to frequency
-		const float lambdaFrequency = 0.5;
-		playFrequency = clampf(playFrequency, 1.0, 10000.0);
-		playFrequencySmooth = powf(playFrequencySmooth, 1.0 - lambdaFrequency) * powf(playFrequency, lambdaFrequency);
+	else {
+		if (!playExport) {
+			// Apply exponential smoothing to frequency
+			const float lambdaFrequency = 0.5;
+			playFrequency = clampf(playFrequency, 1.0, 10000.0);
+			playFrequencySmooth = powf(playFrequencySmooth, 1.0 - lambdaFrequency) * powf(playFrequency, lambdaFrequency);
+		}
 		double ratio = (double)audioSpec.freq / WAVE_LEN / playFrequencySmooth;
 
 		src_callback_read(audioSrc, ratio, outLen, out);
 
 		// Modulate Z
-		if (!playModeXY && browseSpeed > 0.f) {
+		if (playEnabled && !playModeXY && browseSpeed > 0.f) {
 			float deltaZ = browseSpeed * outLen / audioSpec.freq;
 			deltaZ = clampf(deltaZ, 0.f, 1.f);
 			browse += (BANK_LEN-1) * deltaZ;
@@ -155,11 +158,23 @@ void audioCallback(void *userdata, Uint8 *stream, int len) {
 				browseSmooth = browse;
 			}
 		}
-	}
-	else {
-		for (int i = 0; i < outLen; i++) {
-			out[i] = 0.0;
+
+		//Browse through all waveforms 8x each
+		if (playExport) {
+			if (playExportPosition < 0) {
+				//silence for lead-in
+				playExportPosition++;
+				playIndex = 0;
+			} else {
+				playExportPosition += audioSpec.samples / WAVE_LEN;
+				if ((playExportPosition & 7) == 0)
+					browse += 1.0;
+
+				if (browse >= 27.0)
+					stopPlayExport();
+			}
 		}
+
 	}
 }
 
@@ -186,7 +201,7 @@ void audioOpen(int deviceId) {
 	spec.freq = 44100;
 	spec.format = AUDIO_F32;
 	spec.channels = 1;
-	spec.samples = 1024;
+	spec.samples = WAVE_LEN*2;
 	spec.callback = audioCallback;
 
 	const char *deviceName = deviceId >= 0 ? SDL_GetAudioDeviceName(deviceId, 0) : NULL;

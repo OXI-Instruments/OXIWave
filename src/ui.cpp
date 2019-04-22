@@ -143,7 +143,11 @@ static void menuNewBank() {
 /** Caller must free() return value, guaranteed to not be NULL */
 static char *getLastDir() {
 	if (lastFilename[0] == '\0') {
-		return strdup(".");
+		#ifdef ARCH_MAC
+			return strdup("../../..");
+		#else
+			return strdup(".");
+		#endif
 	}
 	else {
 		char filename[PATH_MAX];
@@ -583,9 +587,9 @@ void editorPage() {
 		}
 
 		//Category drop-downs
-		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(30.0f,25.0f));
-		ImGui::SameLine();
+		// ImGui::SameLine();
+		// ImGui::Dummy(ImVec2(30.0f,25.0f));
+		// ImGui::SameLine();
 		ImGui::Text("Load Primitive:");
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 

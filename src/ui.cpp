@@ -20,7 +20,7 @@
 #include "lodepng/lodepng.h"
 
 #include "tablabels.hpp"
-
+#include "buttondropdown.hpp"
 
 static bool showTestWindow = false;
 static bool showAbout = false;
@@ -481,7 +481,7 @@ void renderMenu() {
 				menuManual();
 			ImGui::MenuItem("-----------", NULL, false, false);
 			ImGui::MenuItem("v" TOSTRING(VERSION), NULL, false, false);
-			// if (ImGui::MenuItem("imgui Demo", NULL, showTestWindow)) showTestWindow = !showTestWindow;
+			if (ImGui::MenuItem("imgui Demo", NULL, showTestWindow)) showTestWindow = !showTestWindow;
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
@@ -554,7 +554,7 @@ void effectSlider(EffectID effect) {
 }
 
 
-void editorPage() {
+void editorPage() {	
 	ImGui::BeginChild("Sidebar", ImVec2(200, 0), true);
 	{
 		float dummyZ = 0.0;
@@ -582,11 +582,17 @@ void editorPage() {
 			historyPush();
 		}
 
+		//Category drop-downs
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(30.0f,25.0f));
+		ImGui::SameLine();
+		ImGui::Text("Load Primitive:");
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
 		for (const CatalogCategory &catalogCategory : catalogCategories) {
 			ImGui::SameLine();
-			if (ImGui::Button(catalogCategory.name.c_str())) ImGui::OpenPopup(catalogCategory.name.c_str());
-			if (ImGui::BeginPopup(catalogCategory.name.c_str())) {
+			ImVec2 sz(80, 25);
+			if (ImGui::BeginButtonDropDown(catalogCategory.name.c_str(), sz)) {
 				for (const CatalogFile &catalogFile : catalogCategory.files) {
 					if (ImGui::Selectable(catalogFile.name.c_str())) {
 						memcpy(currentBank.waves[selectedId].samples, catalogFile.samples, sizeof(float) * WAVE_LEN);
@@ -594,9 +600,10 @@ void editorPage() {
 						historyPush();
 					}
 				}
-				ImGui::EndPopup();
+				ImGui::EndButtonDropDown();
 			}
 		}
+		ImGui::PopStyleVar(1);
 
 		// ImGui::SameLine();
 		// if (ImGui::RadioButton("Smooth", tool == SMOOTH_TOOL)) tool = SMOOTH_TOOL;
@@ -816,7 +823,7 @@ void renderMain() {
 		}
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1.0);
-		if (ImGui::Button("Export to SWN")) {
+		if (ImGui::Button("Play into SWN")) {
 			startPlayExport();
 		}
 

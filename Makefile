@@ -40,6 +40,7 @@ else ifeq ($(ARCH),mac)
 	SOURCES += ext/osdialog/osdialog_mac.m
 else ifeq ($(ARCH),win)
 	# Windows
+	CC = gcc.exe
 	FLAGS += -DARCH_WIN
 	LDFLAGS += \
 		-Ldep/lib -lmingw32 -lSDL2main -lSDL2 -lsamplerate -lsndfile -ljansson -lcurl \
@@ -84,7 +85,7 @@ dist: SphereEdit
 	cp doc/SphereEdit_manual.pdf dist/SphereEdit
 	#cp doc/manual.pdf dist/SphereEdit/WaveEdit_manual.pdf
 ifeq ($(ARCH),lin)
-	cp -R logo*.png fonts catalog dist/SphereEdit
+	cp -R fonts catalog dist/SphereEdit
 	cp SphereEdit SphereEdit.sh dist/SphereEdit
 	cp dep/lib/libSDL2-2.0.so.0 dist/SphereEdit
 	cp dep/lib/libsamplerate.so.0 dist/SphereEdit
@@ -112,11 +113,11 @@ else ifeq ($(ARCH),mac)
 	install_name_tool -change $(PWD)/dep/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
 	otool -L dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
 else ifeq ($(ARCH),win)
-	cp -R logo*.png fonts catalog dist/SphereEdit
+	cp -R fonts catalog dist/SphereEdit
 	cp SphereEdit.exe dist/SphereEdit
-	cp /mingw32/bin/libgcc_s_dw2-1.dll dist/SphereEdit
-	cp /mingw32/bin/libwinpthread-1.dll dist/SphereEdit
-	cp /mingw32/bin/libstdc++-6.dll dist/SphereEdit
+	cp /c/mingw32/bin/libgcc_s_dw2-1.dll dist/SphereEdit
+	cp /c/mingw32/bin/libwinpthread-1.dll dist/SphereEdit
+	cp /c/mingw32/bin/libstdc++-6.dll dist/SphereEdit
 	cp dep/bin/SDL2.dll dist/SphereEdit
 	cp dep/bin/libsamplerate-0.dll dist/SphereEdit
 	cp dep/bin/libsndfile-1.dll dist/SphereEdit

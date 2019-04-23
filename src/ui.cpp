@@ -485,7 +485,7 @@ void renderMenu() {
 				menuManual();
 			ImGui::MenuItem("-----------", NULL, false, false);
 			ImGui::MenuItem("v" TOSTRING(VERSION), NULL, false, false);
-			if (ImGui::MenuItem("imgui Demo", NULL, showTestWindow)) showTestWindow = !showTestWindow;
+			// if (ImGui::MenuItem("imgui Demo", NULL, showTestWindow)) showTestWindow = !showTestWindow;
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();

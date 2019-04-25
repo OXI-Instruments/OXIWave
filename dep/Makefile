@@ -1,5 +1,4 @@
-
-LOCAL = $(PWD)
+LOCAL = $(CURDIR)
 
 include ../Makefile-arch.inc
 ifeq ($(ARCH),mac)
@@ -23,35 +22,35 @@ libcurl = curl-7.60.0
 all: $(sdl2) $(jansson) $(libsndfile) $(libsamplerate) $(libcurl)
 
 $(sdl2):
-	wget -nc https://www.libsdl.org/release/$@.tar.gz
+	wget --no-check-certificate https://www.libsdl.org/release/$@.tar.gz
 	tar xf $@.tar.gz
 	cd $@ && ./configure --prefix="$(LOCAL)" --enable-input-tslib=no
 	$(MAKE) -C $@
 	$(MAKE) -C $@ install
 
 $(jansson):
-	wget -nc http://www.digip.org/jansson/releases/$@.tar.gz
+	wget --no-check-certificate http://www.digip.org/jansson/releases/$@.tar.gz
 	tar xf $@.tar.gz
 	cd $@ && ./configure --prefix="$(LOCAL)"
 	$(MAKE) -C $@
 	$(MAKE) -C $@ install
 
 $(libsndfile):
-	wget -nc http://www.mega-nerd.com/libsndfile/files/$@.tar.gz
+	wget --no-check-certificate http://www.mega-nerd.com/libsndfile/files/$@.tar.gz
 	tar xf $@.tar.gz
 	cd $@ && ./configure --prefix="$(LOCAL)"
 	$(MAKE) -C $@
 	$(MAKE) -C $@ install
 
 $(libsamplerate):
-	wget -nc http://www.mega-nerd.com/SRC/$@.tar.gz
+	wget --no-check-certificate http://www.mega-nerd.com/SRC/$@.tar.gz
 	tar xf $@.tar.gz
 	cd $@ && ./configure --prefix="$(LOCAL)"
 	$(MAKE) -C $@
 	$(MAKE) -C $@ install
 
 $(libcurl):
-	wget https://curl.haxx.se/download/$@.tar.gz
+	wget --no-check-certificate https://curl.haxx.se/download/$@.tar.gz
 	tar xf $@.tar.gz
 	cd $@ && ./configure --prefix="$(LOCAL)" \
 		--disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-proxy --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-manual \

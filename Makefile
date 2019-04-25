@@ -1,5 +1,4 @@
 VERSION = 1.0
-
 FLAGS = -Wall -Wextra -Wno-unused-parameter -g -Wno-unused -O3 -march=nocona -ffast-math \
 	-DVERSION=$(VERSION) -DPFFFT_SIMD_DISABLE \
 	-I. -Iext -Iext/imgui -Idep/include -Idep/include/SDL2 -I/opt/X11/include 
@@ -83,7 +82,6 @@ dist: SphereEdit
 	cp -R spheres dist/SphereEdit/"Example Spheres"
 	cp LICENSE* dist/SphereEdit
 	cp doc/SphereEdit_manual.pdf dist/SphereEdit
-	#cp doc/manual.pdf dist/SphereEdit/WaveEdit_manual.pdf
 ifeq ($(ARCH),lin)
 	cp -R fonts catalog dist/SphereEdit
 	cp SphereEdit SphereEdit.sh dist/SphereEdit
@@ -99,6 +97,7 @@ else ifeq ($(ARCH),mac)
 	cp SphereEdit dist/SphereEdit/SphereEdit.app/Contents/MacOS
 	cp iconset/logo*.png dist/SphereEdit/SphereEdit.app/Contents/Resources
 	cp -R logo.icns fonts catalog dist/SphereEdit/SphereEdit.app/Contents/Resources
+	cp doc/SphereEdit_manual.pdf dist/SphereEdit/SphereEdit.app/Contents/Resources/SphereEdit_manual.pdf
 	# Remap dylibs in executable
 	otool -L dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
 	cp dep/lib/libSDL2-2.0.0.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS

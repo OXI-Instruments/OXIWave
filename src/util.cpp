@@ -20,7 +20,11 @@ void openBrowser(const char *url) {
 	char command[1024];
 	// From command-line (not the dist):
 	// snprintf(command, sizeof(command), "open doc/%s", url);
-	snprintf(command, sizeof(command), "open ../../../%s", url);
+
+	// Doesn't work because apps are quarantined in a randomized directory
+	// snprintf(command, sizeof(command), "open ../../../%s", url);
+
+	snprintf(command, sizeof(command), "open %s", url);
 	system(command);
 #endif
 #if defined(_WIN32)

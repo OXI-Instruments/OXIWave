@@ -503,9 +503,9 @@ void renderPreview() {
 	ImGui::PushItemWidth(300.0);
 	ImGui::SliderFloat("##playVolume", &playVolume, -60.0f, 0.0f, "Volume: %.2f dB");
 
-	ImGui::PushItemWidth(-1.0);
+	ImGui::PushItemWidth(-1.0);0
 	ImGui::SameLine();
-	ImGui::SliderFloat("##playFrequency", &playFrequency, 1.0f, 10000.0f, "Frequency: %.2f Hz", 0.0f);
+	ImGui::SliderFloat("##playFrequency", &playFrequency, 1.0f, 1200.0f, "Frequency: %.2f Hz", 0.0f);
 
 
 	ImGui::Checkbox("Morph Interpolate", &morphInterpolate);
@@ -956,7 +956,7 @@ static void refreshStyle() {
 		style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.32f, 0.52f, 0.65f, 1.00f);
 		style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.20f, 0.20f, 0.50f);
 	}
-	else if (styleId == 1) {
+	else /*if (styleId == 1)*/ {
 		style.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.46f, 0.46f, 0.46f, 1.00f);
 		style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.83f, 0.83f, 0.83f, 0.95f);

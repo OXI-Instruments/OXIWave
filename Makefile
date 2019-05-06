@@ -75,14 +75,14 @@ clean:
 	rm -frv $(OBJECTS) SphereEdit dist
 
 
-.PHONY: dist
+.PHONY: dist osxdmg
 dist: SphereEdit
 	rm -frv dist
+ifeq ($(ARCH),lin)
 	mkdir -p dist/SphereEdit
 	cp -R spheres dist/SphereEdit/"Example Spheres"
 	cp LICENSE* dist/SphereEdit
 	cp doc/SphereEdit_manual.pdf dist/SphereEdit
-ifeq ($(ARCH),lin)
 	cp -R fonts catalog dist/SphereEdit
 	cp SphereEdit SphereEdit.sh dist/SphereEdit
 	cp dep/lib/libSDL2-2.0.so.0 dist/SphereEdit
@@ -90,7 +90,13 @@ ifeq ($(ARCH),lin)
 	cp dep/lib/libsndfile.so.1 dist/SphereEdit
 	cp dep/lib/libjansson.so.4 dist/SphereEdit
 	cp dep/lib/libcurl.so.4 dist/SphereEdit
+	cd dist && zip -9 -r SphereEdit-$(VERSION)-$(ARCH).zip SphereEdit
 else ifeq ($(ARCH),mac)
+	mkdir -p dist
+	cp -R iconset/iconed-folder dist/SphereEdit
+	cp -R spheres dist/SphereEdit/"Example Spheres"
+	cp LICENSE* dist/SphereEdit
+	cp doc/SphereEdit_manual.pdf dist/SphereEdit
 	mkdir -p dist/SphereEdit/SphereEdit.app/Contents/MacOS
 	mkdir -p dist/SphereEdit/SphereEdit.app/Contents/Resources
 	cp Info.plist dist/SphereEdit/SphereEdit.app/Contents
@@ -112,6 +118,10 @@ else ifeq ($(ARCH),mac)
 	install_name_tool -change $(PWD)/dep/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
 	otool -L dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
 else ifeq ($(ARCH),win)
+	mkdir -p dist/SphereEdit
+	cp -R spheres dist/SphereEdit/"Example Spheres"
+	cp LICENSE* dist/SphereEdit
+	cp doc/SphereEdit_manual.pdf dist/SphereEdit
 	cp -R fonts catalog dist/SphereEdit
 	cp SphereEdit.exe dist/SphereEdit
 	cp /c/mingw32/bin/libgcc_s_dw2-1.dll dist/SphereEdit
@@ -122,9 +132,29 @@ else ifeq ($(ARCH),win)
 	cp dep/bin/libsndfile-1.dll dist/SphereEdit
 	cp dep/bin/libjansson-4.dll dist/SphereEdit
 	cp dep/bin/libcurl-4.dll dist/SphereEdit
-endif
 	cd dist && zip -9 -r SphereEdit-$(VERSION)-$(ARCH).zip SphereEdit
+endif
 
+osxdmg: SphereEdit
+ifeq ($(ARCH),mac)
+	xattr -cr dist/SphereEdit/SphereEdit.app
+	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit/SphereEdit.app/Contents/MacOS/lib*
+	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit/SphereEdit.app
+	rm -frv SphereEdit*.dmg
+	rm -frv dist/SphereEdit*.dmg
+	#Depends on create-dmg: `brew install create-dmg` or see https://github.com/andreyvit/create-dmg
+	create-dmg \
+		--volname SphereEdit-$(VERSION) \
+		--volicon iconset/logo.icns \
+		--background bkgnd/background-2x.png \
+		--window-size 800 680 \
+		--icon-size 128 \
+		--icon SphereEdit 200 370 \
+		--app-drop-link 600 370 \
+		SphereEdit-$(VERSION)-$(ARCH).dmg dist
+	mv SphereEdit-$(VERSION)-$(ARCH).dmg dist/
+	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit-$(VERSION)-$(ARCH).dmg
+endif
 
 # SUFFIXES:
 

@@ -503,7 +503,7 @@ void renderPreview() {
 	ImGui::PushItemWidth(300.0);
 	ImGui::SliderFloat("##playVolume", &playVolume, -60.0f, 0.0f, "Volume: %.2f dB");
 
-	ImGui::PushItemWidth(-1.0);0
+	ImGui::PushItemWidth(-1.0);
 	ImGui::SameLine();
 	ImGui::SliderFloat("##playFrequency", &playFrequency, 1.0f, 1200.0f, "Frequency: %.2f Hz", 0.0f);
 

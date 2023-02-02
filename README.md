@@ -1,6 +1,6 @@
 # OXI Wave
 
-Modified version of Synthesis Technology WaveEdit and 4ms SphereEdit, the wavetable and bank editor for the Synthesis Technology [E370](http://synthtech.com/eurorack/E370/) and [E352](http://synthtech.com/eurorack/E352/) Eurorack synthesizer modules.
+Modified version of Synthesis Technology WaveEdit and 4ms SphereEdit.
 
 Original WaveEdit, then adapted to SphereEdit, was written by Andrew Belt and can be found [here](https://github.com/AndrewBelt/WaveEdit/)
 

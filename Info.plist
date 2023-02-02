@@ -5,23 +5,19 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleName</key>
-	<string>SphereEdit</string>
+	<string>OXI Instruments OXIWave</string>
 	<key>CFBundleDisplayName</key>
-	<string>SphereEdit</string>
+	<string>OXIWave</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.fourmscompany.sphereedit</string>
+	<string>com.oxiinstruments.oxiwave</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
-	<string>SWNS</string>
+	<string>WAVE</string>
 	<key>CFBundleExecutable</key>
-	<string>SphereEdit</string>
+	<string>OXIEdit</string>
 	<key>CFBundleIconFile</key>
 	<string>logo</string>
-	<key>CFBundleVersion</key>
-	<string>1.0</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSHighResolutionCapable</key>

@@ -29,7 +29,7 @@ void startPlayExport(void) {
 
 	playEnabled = false;
 	playVolume = 0.0;
-	playFrequency = 44100.0/(float)WAVE_LEN;
+	playFrequency = SAMPLE_RATE/(float)WAVE_LEN;
 	playFrequencySmooth = playFrequency;
 	playModeXY = false;
 	morphInterpolate = false;

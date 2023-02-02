@@ -127,6 +127,9 @@ bool str_ends_with(char *str, const char *ending);
 ////////////////////
 
 #define WAVE_LEN 512
+//#define WAVE_LEN 256
+#define SAMPLE_RATE 48000
+
 
 enum EffectID {
 	PRE_GAIN,
@@ -202,7 +205,7 @@ struct Bank {
 	/** Binary dump of the bank struct */
 	void save(const char *filename);
 	void load(const char *filename);
-	/** WAV file with BANK_LEN * WAVE_LEN samples: not used in SphereEdit*/
+	/** WAV file with BANK_LEN * WAVE_LEN samples: not used in OXIWave*/
 	void saveWAV(const char *filename);
 	void loadWAV(const char *filename);
 	/** Saves/Loads each wave to its own file in a directory */
@@ -210,6 +213,7 @@ struct Bank {
 	void loadWaves(const char *dirname);
 	/** WAV file with each WAV in the bank repeated 8 times **/
 	void loadMultiWAVs(const char *filename);
+	void loadMultiWAVsOLD(const char *filename);
 	void exportMultiWAVs(const char *filename);
 };
 

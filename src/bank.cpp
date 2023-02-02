@@ -78,7 +78,7 @@ void Bank::load(const char *filename) {
 
 void Bank::saveWAV(const char *filename) {
 	SF_INFO info;
-	info.samplerate = 44100;
+	info.samplerate = SAMPLE_RATE;
 	info.channels = 1;
 	info.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 | SF_ENDIAN_LITTLE;
 	SNDFILE *sf = sf_open(filename, SFM_WRITE, &info);
@@ -141,6 +141,24 @@ void Bank::loadMultiWAVs(const char *filename) {
 		sf_read_float(sf, waves[i].samples, WAVE_LEN);
 		waves[i].commitSamples();
 		//Skip next 7 repititions
+//		sf_seek(sf, WAVE_LEN * 7, SEEK_CUR);
+	}
+
+	sf_close(sf);
+}
+
+void Bank::loadMultiWAVsOLD(const char *filename) {
+	clear();
+
+	SF_INFO info;
+	SNDFILE *sf = sf_open(filename, SFM_READ, &info);
+	if (!sf)
+		return;
+
+	for (int i = 0; i < BANK_LEN; i++) {
+		sf_read_float(sf, waves[i].samples, WAVE_LEN);
+		waves[i].commitSamples();
+		//Skip next 7 repititions
 		sf_seek(sf, WAVE_LEN * 7, SEEK_CUR);
 	}
 
@@ -151,7 +169,7 @@ void Bank::loadMultiWAVs(const char *filename) {
 
 void Bank::exportMultiWAVs(const char *filename) {
 	SF_INFO info;
-	info.samplerate = 44100;
+	info.samplerate = SAMPLE_RATE;
 	info.channels = 1;
 	info.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 | SF_ENDIAN_LITTLE;
 	SNDFILE *sf = sf_open(filename, SFM_WRITE, &info);
@@ -159,7 +177,7 @@ void Bank::exportMultiWAVs(const char *filename) {
 		return;
 
 	for (int j = 0; j < BANK_LEN; j++) {
-		for (int k = 0; k < 8; k++) 
+		for (int k = 0; k < 1; k++)
 			sf_write_float(sf, waves[j].postSamples, WAVE_LEN);
 	}
 

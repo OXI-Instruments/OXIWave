@@ -1,5 +1,5 @@
 VERSION = 1.0
-FLAGS = -Wall -Wextra -Wno-unused-parameter -g -Wno-unused -O3 -march=nocona -ffast-math \
+FLAGS = -Wall -Wextra -Wno-unused-parameter -g -Wno-unused -O2 -march=nocona -ffast-math \
 	-DVERSION=$(VERSION) -DPFFFT_SIMD_DISABLE \
 	-I. -Iext -Iext/imgui -Idep/include -Idep/include/SDL2 -I/opt/X11/include 
 CFLAGS =
@@ -52,31 +52,31 @@ endif
 
 
 .DEFAULT_GOAL := build
-build: SphereEdit
+build: OXIWave
 
-run: SphereEdit
-	LD_LIBRARY_PATH=dep/lib ./SphereEdit
+run: OXIWave
+	LD_LIBRARY_PATH=dep/lib ./OXIWave
 
-debug: SphereEdit
+debug: OXIWave
 ifeq ($(ARCH),mac)
-	lldb ./SphereEdit
+	lldb ./OXIWave
 else
-	gdb -ex 'run' ./SphereEdit
+	gdb -ex 'run' ./OXIWave
 endif
 
 
 OBJECTS += $(SOURCES:%=build/%.o)
 
 
-SphereEdit: $(OBJECTS)
+OXIWave: $(OBJECTS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -frv $(OBJECTS) SphereEdit dist
+	rm -frv $(OBJECTS) OXIWave dist
 
 
 .PHONY: dist osxdmg
-dist: SphereEdit
+dist: OXIWave
 	rm -frv dist
 ifeq ($(ARCH),lin)
 	mkdir -p dist/SphereEdit
@@ -93,30 +93,33 @@ ifeq ($(ARCH),lin)
 	cd dist && zip -9 -r SphereEdit-$(VERSION)-$(ARCH).zip SphereEdit
 else ifeq ($(ARCH),mac)
 	mkdir -p dist
-	cp -R iconset/iconed-folder dist/SphereEdit
-	cp -R spheres dist/SphereEdit/"Example Spheres"
-	cp LICENSE* dist/SphereEdit
-	cp doc/SphereEdit_manual.pdf dist/SphereEdit
-	mkdir -p dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	mkdir -p dist/SphereEdit/SphereEdit.app/Contents/Resources
-	cp Info.plist dist/SphereEdit/SphereEdit.app/Contents
-	cp SphereEdit dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	cp iconset/logo*.png dist/SphereEdit/SphereEdit.app/Contents/Resources
-	cp -R logo.icns fonts catalog dist/SphereEdit/SphereEdit.app/Contents/Resources
-	cp doc/SphereEdit_manual.pdf dist/SphereEdit/SphereEdit.app/Contents/Resources/SphereEdit_manual.pdf
+	cp -R iconset/iconed-folder dist/OXIWave
+	cp -R wavetables dist/OXIWave/"Example Spheres"
+	cp LICENSE* dist/OXIWave
+	cp doc/OXIWave_manual.pdf dist/OXIWave
+	mkdir -p dist/OXIWave/OXIWave.app/Contents/MacOS
+	mkdir -p dist/OXIWave/OXIWave.app/Contents/Resources
+	cp Info.plist dist/OXIWave/OXIWave.app/Contents
+	cp OXIWave dist/OXIWave/OXIWave.app/Contents/MacOS
+	# img
+	cp iconset/logo*.png dist/OXIWave/OXIWave.app/Contents/Resources
+	# logo
+	cp -R logo.icns fonts catalog dist/OXIWave/OXIWave.app/Contents/Resources
+	# manual
+	cp doc/OXIWave_manual.pdf dist/OXIWave/OXIWave.app/Contents/Resources/OXIWave_manual.pdf
 	# Remap dylibs in executable
-	otool -L dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
-	cp dep/lib/libSDL2-2.0.0.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	install_name_tool -change $(PWD)/dep/lib/libSDL2-2.0.0.dylib @executable_path/libSDL2-2.0.0.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
-	cp dep/lib/libsamplerate.0.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	install_name_tool -change $(PWD)/dep/lib/libsamplerate.0.dylib @executable_path/libsamplerate.0.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
-	cp dep/lib/libsndfile.1.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	install_name_tool -change $(PWD)/dep/lib/libsndfile.1.dylib @executable_path/libsndfile.1.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
-	cp dep/lib/libjansson.4.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	install_name_tool -change $(PWD)/dep/lib/libjansson.4.dylib @executable_path/libjansson.4.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
-	cp dep/lib/libcurl.4.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS
-	install_name_tool -change $(PWD)/dep/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
-	otool -L dist/SphereEdit/SphereEdit.app/Contents/MacOS/SphereEdit
+	otool -L dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
+	cp dep/lib/libSDL2-2.0.0.dylib dist/OXIWave/OXIWave.app/Contents/MacOS
+	install_name_tool -change $(PWD)/dep/lib/libSDL2-2.0.0.dylib @executable_path/libSDL2-2.0.0.dylib dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
+	cp dep/lib/libsamplerate.0.dylib dist/OXIWave/OXIWave.app/Contents/MacOS
+	install_name_tool -change $(PWD)/dep/lib/libsamplerate.0.dylib @executable_path/libsamplerate.0.dylib dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
+	cp dep/lib/libsndfile.1.dylib dist/OXIWave/OXIWave.app/Contents/MacOS
+	install_name_tool -change $(PWD)/dep/lib/libsndfile.1.dylib @executable_path/libsndfile.1.dylib dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
+	cp dep/lib/libjansson.4.dylib dist/OXIWave/OXIWave.app/Contents/MacOS
+	install_name_tool -change $(PWD)/dep/lib/libjansson.4.dylib @executable_path/libjansson.4.dylib dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
+	cp dep/lib/libcurl.4.dylib dist/OXIWave/OXIWave.app/Contents/MacOS
+	install_name_tool -change $(PWD)/dep/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
+	otool -L dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
 else ifeq ($(ARCH),win)
 	mkdir -p dist/SphereEdit
 	cp -R spheres dist/SphereEdit/"Example Spheres"
@@ -135,7 +138,7 @@ else ifeq ($(ARCH),win)
 	cd dist && zip -9 -r SphereEdit-$(VERSION)-$(ARCH).zip SphereEdit
 endif
 
-osxdmg: SphereEdit
+osxdmg: OXIWave
 ifeq ($(ARCH),mac)
 	xattr -cr dist/SphereEdit/SphereEdit.app
 	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit/SphereEdit.app/Contents/MacOS/lib*
@@ -153,7 +156,7 @@ ifeq ($(ARCH),mac)
 		--app-drop-link 600 370 \
 		SphereEdit-$(VERSION)-$(ARCH).dmg dist
 	mv SphereEdit-$(VERSION)-$(ARCH).dmg dist/
-	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit-$(VERSION)-$(ARCH).dmg
+	codesign -s "Developer ID Application: OXI" dist/OXIWave-$(VERSION)-$(ARCH).dmg
 endif
 
 # SUFFIXES:

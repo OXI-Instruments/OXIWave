@@ -24,9 +24,9 @@
 
 static bool showTestWindow = false;
 static bool showAbout = false;
-// static ImTextureID logoTextureLight;
+ static ImTextureID logoTextureLight;
 // static ImTextureID logoTextureDark;
-// static ImTextureID logoTexture;
+ static ImTextureID logoTexture;
 char lastFilename[1024] = "";
 static int styleId = 0;
 int selectedId = 0;
@@ -130,7 +130,7 @@ static void showCurrentBankPage() {
 }
 
 static void menuManual() {
-	openBrowser("SphereEdit_manual.pdf");
+	openBrowser("OXIWave_manual.pdf");
 }
 
 static void menuNewBank() {
@@ -170,9 +170,22 @@ static void menuOpenSphere() {
 	free(dir);
 }
 
+static void menuOpenSphereOLD() {
+	char *dir = getLastDir();
+	char *path = osdialog_file(OSDIALOG_OPEN, dir, NULL, NULL);
+	if (path) {
+		showCurrentBankPage();
+		currentBank.loadMultiWAVsOLD(path);
+		snprintf(lastFilename, sizeof(lastFilename), "%s", path);
+		historyPush();
+		free(path);
+	}
+	free(dir);
+}
+
 static void menuSaveSphereAs() {
 	char *dir = getLastDir();
-	char *path = osdialog_file(OSDIALOG_SAVE, dir, "Untitled Sphere.wav", NULL);
+	char *path = osdialog_file(OSDIALOG_SAVE, dir, "Untitled Wavetable.wav", NULL);
 	if (path) {
 		currentBank.exportMultiWAVs(path);
 		snprintf(lastFilename, sizeof(lastFilename), "%s", path);
@@ -419,17 +432,42 @@ void renderWaveMenu() {
 void renderMenu() {
 	menuKeyCommands();
 
+	{
+		int width, height;
+		getImageSize(logoTexture, &width, &height);
+		ImVec2 padding = ImVec2(8, 4);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, padding);
+		ImGui::SetNextWindowPos(ImVec2(0, 0));
+		ImGui::SetNextWindowSize(ImVec2(width + 2 * padding.x, height + 2 * padding.y));
+		if (ImGui::Begin("Logo", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs)) {
+			ImGui::Image(logoTexture, ImVec2(width, height));
+			ImGui::End();
+		}
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar();
+	}
+
+
 	// Draw main menu
 	if (ImGui::BeginMenuBar()) {
+
+		// This will be hidden by the window with the logo
+		if (ImGui::BeginMenu("             " TOSTRING(VERSION), false)) {
+			ImGui::EndMenu();
+		}
+
 		// File
 		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("New Sphere", ImGui::GetIO().OSXBehaviors ? "Cmd+N" : "Ctrl+N"))
+			if (ImGui::MenuItem("New Wavetable", ImGui::GetIO().OSXBehaviors ? "Cmd+N" : "Ctrl+N"))
 				menuNewBank();
-			if (ImGui::MenuItem("Open Sphere...", ImGui::GetIO().OSXBehaviors ? "Cmd+O" : "Ctrl+O"))
+			if (ImGui::MenuItem("Open Wavetable...", ImGui::GetIO().OSXBehaviors ? "Cmd+O" : "Ctrl+O"))
 				menuOpenSphere();
-			if (ImGui::MenuItem("Save Sphere", ImGui::GetIO().OSXBehaviors ? "Cmd+S" : "Ctrl+S"))
+			if (ImGui::MenuItem("Open Sphere...", ImGui::GetIO().OSXBehaviors ? "Cmd+Shift+O" : "Ctrl+Shift+O"))
+				menuOpenSphereOLD();
+			if (ImGui::MenuItem("Save Wavetable", ImGui::GetIO().OSXBehaviors ? "Cmd+S" : "Ctrl+S"))
 				menuSaveSphere();
-			if (ImGui::MenuItem("Save Sphere As...", ImGui::GetIO().OSXBehaviors ? "Cmd+Shift+S" : "Ctrl+Shift+S"))
+			if (ImGui::MenuItem("Save Wavetable As...", ImGui::GetIO().OSXBehaviors ? "Cmd+Shift+S" : "Ctrl+Shift+S"))
 				menuSaveSphereAs();
 
 			ImGui::MenuItem("##spacer", NULL, false, false);
@@ -466,20 +504,20 @@ void renderMenu() {
 			ImGui::EndMenu();
 		}
 		// Colors
-		if (ImGui::BeginMenu("Colors")) {
-			if (ImGui::MenuItem("Black Swan", NULL, styleId == 0)) {
-				styleId = 0;
-				refreshStyle();
-			}
-			if (ImGui::MenuItem("White Swan", NULL, styleId == 1)) {
-				styleId = 1;
-				refreshStyle();
-			}
-			ImGui::EndMenu();
-		}
+//		if (ImGui::BeginMenu("Colors")) {
+//			if (ImGui::MenuItem("Black Swan", NULL, styleId == 0)) {
+//				styleId = 0;
+//				refreshStyle();
+//			}
+//			if (ImGui::MenuItem("White Swan", NULL, styleId == 1)) {
+//				styleId = 1;
+//				refreshStyle();
+//			}
+//			ImGui::EndMenu();
+//		}
 		// Help
 		if (ImGui::BeginMenu("Help")) {
-			if (ImGui::MenuItem("About SphereEdit", NULL, false)) 
+			if (ImGui::MenuItem("About OXIWave", NULL, false))
 				showAbout = true;
 			if (ImGui::MenuItem("Manual PDF", "F1", false))
 				menuManual();
@@ -496,8 +534,8 @@ void renderMenu() {
 void renderPreview() {
 	ImGui::Checkbox("Play", &playEnabled);
 
-	ImGui::SameLine();
-	if (ImGui::Button("Play into SWN"))	startPlayExport();
+//	ImGui::SameLine();
+//	if (ImGui::Button("Play into SWN"))	startPlayExport();
 
 	ImGui::SameLine();
 	ImGui::PushItemWidth(300.0);
@@ -872,14 +910,14 @@ void renderMain() {
     	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
     	ImFont* font = atlas->Fonts[1];
     	ImGui::PushFont(font);
-        ImGui::Text("SphereEdit");
+        ImGui::Text("OXIWave");
         ImGui::Text("");
 		ImGui::PopFont();
 
-        ImGui::Text("SphereEdit is an open-source wavetable editor for the Spherical Wavetable Navigator from 4ms Company. It was developed by Dan Green. Source code can be found at https://github.com/danngreen/SphereEdit");
+        ImGui::Text("OXIWave is an open-source wavetable editor for the Spherical Wavetable Navigator from 4ms Company. It was developed by Dan Green. Source code can be found at https://github.com/danngreen/SphereEdit");
         ImGui::Text("");
 
-      	ImGui::Text("SphereEdit is based on WaveEdit, a cross-platform (Mac/Windows/Linux) wavetable and bank editor designed for the Synthesis Technology (http://synthtech.com/) E370 Quad Morphing VCO and E352 Cloud Terrarium VCO Eurorack synthesizer modules.");
+      	ImGui::Text("OXIWave is based on WaveEdit, a cross-platform (Mac/Windows/Linux) wavetable and bank editor designed for the Synthesis Technology (http://synthtech.com/) E370 Quad Morphing VCO and E352 Cloud Terrarium VCO Eurorack synthesizer modules.");
 		ImGui::Text("WaveEdit was developed by Andrew Belt for Synthesis Technology as a stretch goal of the E370 Kickstarter, and is available for free download at http://synthtech.com/waveedit");
         ImGui::Text("");
 
@@ -913,15 +951,15 @@ static void refreshStyle() {
 
 	if (styleId == 0) {
 		style.Colors[ImGuiCol_Text]                  = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-		style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.48f, 0.49f, 0.37f, 1.00f);
+		style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.48f, 0.37f, 0.49f, 1.00f);
 		style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.00f, 0.00f, 0.00f, 0.95f);
 		style.Colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.26f, 0.26f, 0.26f, 1.00f);
-		style.Colors[ImGuiCol_Border]                = ImVec4(0.41f, 0.40f, 0.05f, 1.00f);
+		style.Colors[ImGuiCol_Border]                = ImVec4(0.41f, 0.05f, 0.40f, 1.00f);
 		style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 		style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
-		style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.31f, 0.25f, 0.01f, 1.00f);
-		style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.71f, 0.60f, 0.08f, 1.00f);
+		style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.31f, 0.01f, 0.25f, 1.00f);
+		style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.71f, 0.08f, 0.60f, 1.00f);
 		style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
 		style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
@@ -931,30 +969,32 @@ static void refreshStyle() {
 		style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_ComboBg]               = ImVec4(0.32f, 0.32f, 0.32f, 1.00f);
-		style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.70f, 0.71f, 0.09f, 1.00f);
-		style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.70f, 0.71f, 0.09f, 1.00f);
-		style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.70f, 0.71f, 0.09f, 1.00f);
+		style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.70f, 0.09f, 0.71f, 1.00f);
+		style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.70f, 0.09f, 0.71f, 1.00f);
+		style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.70f, 0.09f, 0.71f, 1.00f);
 		style.Colors[ImGuiCol_Button]                = ImVec4(0.24f, 0.24f, 0.24f, 1.00f);
-		style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.31f, 0.25f, 0.01f, 1.00f);
-		style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.41f, 0.40f, 0.05f, 1.00f);
+		style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.31f, 0.01f, 0.25f, 1.00f);
+		style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.41f, 0.05f, 0.40f, 1.00f);
 		style.Colors[ImGuiCol_Header]                = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_Separator]             = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-		style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.60f, 0.60f, 0.70f, 1.00f);
-		style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.70f, 0.70f, 0.90f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.60f, 0.70f, 0.60f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.70f, 0.90f, 0.70f, 1.00f);
 		style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.36f, 0.36f, 0.36f, 1.00f);
-		style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.70f, 0.71f, 0.09f, 1.00f);
-		style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.70f, 0.71f, 0.09f, 1.00f);
+		style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.70f, 0.09f, 0.71f, 1.00f);
+		style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.70f, 0.09f, 0.71f, 1.00f);
 		style.Colors[ImGuiCol_CloseButton]           = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-		style.Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
-		style.Colors[ImGuiCol_CloseButtonActive]     = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
+		style.Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(0.98f, 0.36f, 0.39f, 1.00f);
+		style.Colors[ImGuiCol_CloseButtonActive]     = ImVec4(0.98f, 0.36f, 0.39f, 1.00f);
 		style.Colors[ImGuiCol_PlotLines]             = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-		style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-		style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.34f, 0.34f, 0.05f, 1.00f);
-		style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.70f, 0.71f, 0.09f, 1.00f);
-		style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.32f, 0.52f, 0.65f, 1.00f);
+		style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.35f, 0.43f, 1.00f);
+		style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.34f, 0.05f, 0.34f, 1.00f);
+		style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.70f, 0.09f, 0.71f, 1.00f);
+		style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.32f, 0.65f, 0.52f, 1.00f);
 		style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.20f, 0.20f, 0.50f);
+
+		logoTexture = logoTextureLight;
 	}
 	else /*if (styleId == 1)*/ {
 		style.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
@@ -1206,18 +1246,18 @@ void uiInit() {
 	// Load fonts
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("fonts/Roboto-Regular.ttf", 16.0);
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 24.0);
-	// logoTextureLight = loadImage("logo-light.png");
+	 logoTextureLight = loadImage("logo-oxi.png");
 	// logoTextureDark = loadImage("logo-dark.png");
 
 	// Load UI settings
 	// If this gets any more complicated, it should be JSON.
-	{
-		FILE *f = fopen("ui.dat", "rb");
-		if (f) {
-			fread(&styleId, sizeof(styleId), 1, f);
-			fclose(f);
-		}
-	}
+//	{
+//		FILE *f = fopen("ui.dat", "rb");
+//		if (f) {
+//			fread(&styleId, sizeof(styleId), 1, f);
+//			fclose(f);
+//		}
+//	}
 
 	refreshStyle();
 }

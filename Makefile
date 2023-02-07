@@ -16,10 +16,6 @@ SOURCES = \
 	ext/imgui/examples/sdl_opengl2_example/imgui_impl_sdl.cpp \
 	$(wildcard src/*.cpp)
 
-$(eval GCC_PATH := $(shell where gcc))
-$(eval MINGW_DIR := $(shell dirname $(GCC_PATH)))
-$(eval MINGW_ARCH_DIR := $(shell basename $(shell dirname $(MINGW_DIR))))
-
 # OS-specific
 include Makefile-arch.inc
 ifeq ($(ARCH),lin)
@@ -41,6 +37,11 @@ else ifeq ($(ARCH),mac)
 		-Ldep/lib -lSDL2 -lsamplerate -lsndfile -ljansson -lcurl
 	SOURCES += ext/osdialog/osdialog_mac.m
 else ifeq ($(ARCH),win)
+
+  $(eval GCC_PATH := $(shell where gcc))
+  $(eval MINGW_DIR := $(shell dirname $(GCC_PATH)))
+  $(eval MINGW_ARCH_DIR := $(shell basename $(shell dirname $(MINGW_DIR))))
+
 	# Windows
 	CC = gcc.exe
 	FLAGS += -DARCH_WIN -DNDEBUG
@@ -82,22 +83,23 @@ clean:
 dist: OXIWave
 	rm -frv dist
 ifeq ($(ARCH),lin)
-	mkdir -p dist/SphereEdit
-	cp -R spheres dist/SphereEdit/"Example Spheres"
-	cp LICENSE* dist/SphereEdit
-	cp doc/SphereEdit_manual.pdf dist/SphereEdit
-	cp -R fonts catalog dist/SphereEdit
-	cp SphereEdit SphereEdit.sh dist/SphereEdit
-	cp dep/lib/libSDL2-2.0.so.0 dist/SphereEdit
-	cp dep/lib/libsamplerate.so.0 dist/SphereEdit
-	cp dep/lib/libsndfile.so.1 dist/SphereEdit
-	cp dep/lib/libjansson.so.4 dist/SphereEdit
-	cp dep/lib/libcurl.so.4 dist/SphereEdit
-	cd dist && zip -9 -r SphereEdit-$(VERSION)-$(ARCH).zip SphereEdit
+	mkdir -p dist/OXIWave
+	cp -R spheres dist/OXIWave/"Example Spheres"
+	cp LICENSE* dist/OXIWave
+	cp doc/OXIWave_manual.pdf dist/OXIWave
+	cp -R fonts catalog dist/OXIWave
+	cp OXIWave OXIWave.sh dist/OXIWave
+	cp dep/lib/libSDL2-2.0.so.0 dist/OXIWave
+	cp dep/lib/libsamplerate.so.0 dist/OXIWave
+	cp dep/lib/libsndfile.so.1 dist/OXIWave
+	cp dep/lib/libjansson.so.4 dist/OXIWave
+	cp dep/lib/libcurl.so.4 dist/OXIWave
+	cd dist && zip -9 -r OXIWave-$(VERSION)-$(ARCH).zip OXIWave
 else ifeq ($(ARCH),mac)
-	mkdir -p dist
-	cp -R iconset/iconed-folder dist/OXIWave
-	cp -R wavetables dist/OXIWave/"Example Spheres"
+	mkdir -p dist/OXIWave
+	# cp -R iconset/iconed-folder dist/OXIWave
+	cp -R spheres dist/OXIWave/"Example Spheres"
+	cp -R Wavetables dist/OXIWave/"CORAL Wavetables"
 	cp LICENSE* dist/OXIWave
 	cp doc/OXIWave_manual.pdf dist/OXIWave
 	mkdir -p dist/OXIWave/OXIWave.app/Contents/MacOS
@@ -105,7 +107,8 @@ else ifeq ($(ARCH),mac)
 	cp Info.plist dist/OXIWave/OXIWave.app/Contents
 	cp OXIWave dist/OXIWave/OXIWave.app/Contents/MacOS
 	# img
-	cp iconset/logo*.png dist/OXIWave/OXIWave.app/Contents/Resources
+	# cp iconset/logo*.png dist/OXIWave/OXIWave.app/Contents/Resources
+	cp logo-oxi.png dist/OXIWave/OXIWave.app/Contents/Resources
 	# logo
 	cp -R logo.icns fonts catalog dist/OXIWave/OXIWave.app/Contents/Resources
 	# manual
@@ -127,7 +130,7 @@ else ifeq ($(ARCH),win)
 	mkdir -p dist/OXIWave
 	cp -R spheres dist/OXIWave/"Example Spheres"
 	cp LICENSE* dist/OXIWave
-	cp doc/SphereEdit_manual.pdf dist/OXIWave
+	cp doc/OXIWave_manual.pdf dist/OXIWave
 	cp -R fonts catalog dist/OXIWave
 	cp OXIWave.exe dist/OXIWave
 	@echo $(MINGW_ARCH_DIR)
@@ -148,22 +151,22 @@ endif
 
 osxdmg: OXIWave
 ifeq ($(ARCH),mac)
-	xattr -cr dist/SphereEdit/SphereEdit.app
-	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit/SphereEdit.app/Contents/MacOS/lib*
-	codesign -s "Developer ID Application: 4ms Company (T3RAH9MKK8)" dist/SphereEdit/SphereEdit.app
-	rm -frv SphereEdit*.dmg
-	rm -frv dist/SphereEdit*.dmg
+	xattr -cr dist/OXIWave/OXIWave.app
+	codesign -s "Developer ID Application: OXI Instruments (T3RAH9MKK8)" dist/OXIWave/OXIWave.app/Contents/MacOS/lib*
+	codesign -s "Developer ID Application: OXI Instruments (T3RAH9MKK8)" dist/OXIWave/OXIWave.app
+	rm -frv OXIWave*.dmg
+	rm -frv dist/OXIWave*.dmg
 	#Depends on create-dmg: `brew install create-dmg` or see https://github.com/andreyvit/create-dmg
 	create-dmg \
-		--volname SphereEdit-$(VERSION) \
+		--volname OXIWave-$(VERSION) \
 		--volicon iconset/logo.icns \
 		--background bkgnd/background-2x.png \
 		--window-size 800 680 \
 		--icon-size 128 \
-		--icon SphereEdit 200 370 \
+		--icon OXIWave 200 370 \
 		--app-drop-link 600 370 \
-		SphereEdit-$(VERSION)-$(ARCH).dmg dist
-	mv SphereEdit-$(VERSION)-$(ARCH).dmg dist/
+		OXIWave-$(VERSION)-$(ARCH).dmg dist
+	mv OXIWave-$(VERSION)-$(ARCH).dmg dist/
 	codesign -s "Developer ID Application: OXI" dist/OXIWave-$(VERSION)-$(ARCH).dmg
 endif
 

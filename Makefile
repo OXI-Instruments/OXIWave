@@ -16,6 +16,9 @@ SOURCES = \
 	ext/imgui/examples/sdl_opengl2_example/imgui_impl_sdl.cpp \
 	$(wildcard src/*.cpp)
 
+$(eval GCC_PATH := $(shell where gcc))
+$(eval MINGW_DIR := $(shell dirname $(GCC_PATH)))
+$(eval MINGW_ARCH_DIR := $(shell basename $(shell dirname $(MINGW_DIR))))
 
 # OS-specific
 include Makefile-arch.inc
@@ -40,7 +43,7 @@ else ifeq ($(ARCH),mac)
 else ifeq ($(ARCH),win)
 	# Windows
 	CC = gcc.exe
-	FLAGS += -DARCH_WIN
+	FLAGS += -DARCH_WIN -DNDEBUG
 	LDFLAGS += \
 		-Ldep/lib -lmingw32 -lSDL2main -lSDL2 -lsamplerate -lsndfile -ljansson -lcurl \
 		-lopengl32 -mwindows
@@ -71,7 +74,7 @@ OBJECTS += $(SOURCES:%=build/%.o)
 OXIWave: $(OBJECTS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-clean:
+clean:	
 	rm -frv $(OBJECTS) OXIWave dist
 
 
@@ -120,22 +123,27 @@ else ifeq ($(ARCH),mac)
 	cp dep/lib/libcurl.4.dylib dist/OXIWave/OXIWave.app/Contents/MacOS
 	install_name_tool -change $(PWD)/dep/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
 	otool -L dist/OXIWave/OXIWave.app/Contents/MacOS/OXIWave
-else ifeq ($(ARCH),win)
-	mkdir -p dist/SphereEdit
-	cp -R spheres dist/SphereEdit/"Example Spheres"
-	cp LICENSE* dist/SphereEdit
-	cp doc/SphereEdit_manual.pdf dist/SphereEdit
-	cp -R fonts catalog dist/SphereEdit
-	cp SphereEdit.exe dist/SphereEdit
-	cp /c/mingw32/bin/libgcc_s_dw2-1.dll dist/SphereEdit
-	cp /c/mingw32/bin/libwinpthread-1.dll dist/SphereEdit
-	cp /c/mingw32/bin/libstdc++-6.dll dist/SphereEdit
-	cp dep/bin/SDL2.dll dist/SphereEdit
-	cp dep/bin/libsamplerate-0.dll dist/SphereEdit
-	cp dep/bin/libsndfile-1.dll dist/SphereEdit
-	cp dep/bin/libjansson-4.dll dist/SphereEdit
-	cp dep/bin/libcurl-4.dll dist/SphereEdit
-	cd dist && zip -9 -r SphereEdit-$(VERSION)-$(ARCH).zip SphereEdit
+else ifeq ($(ARCH),win)	
+	mkdir -p dist/OXIWave
+	cp -R spheres dist/OXIWave/"Example Spheres"
+	cp LICENSE* dist/OXIWave
+	cp doc/SphereEdit_manual.pdf dist/OXIWave
+	cp -R fonts catalog dist/OXIWave
+	cp OXIWave.exe dist/OXIWave
+	@echo $(MINGW_ARCH_DIR)
+    ifeq ($(MINGW_ARCH_DIR),mingw64)
+		cp $(MINGW_DIR)/libgcc_s_seh-1.dll dist/OXIWave
+    else ifeq ($(MINGW_ARCH_DIR),mingw32)
+		cp $(MINGW_DIR)/libgcc_s_dw2-1.dll dist/OXIWave
+    endif	
+	cp $(MINGW_DIR)/libwinpthread-1.dll dist/OXIWave
+	cp $(MINGW_DIR)/libstdc++-6.dll dist/OXIWave
+	cp dep/bin/SDL2.dll dist/OXIWave
+	cp dep/bin/libsamplerate-0.dll dist/OXIWave
+	cp dep/bin/libsndfile-1.dll dist/OXIWave
+	cp dep/bin/libjansson-4.dll dist/OXIWave
+	cp dep/bin/libcurl-4.dll dist/OXIWave
+	cd dist && zip -9 -r OXIWave-$(VERSION)-$(ARCH).zip OXIWave
 endif
 
 osxdmg: OXIWave

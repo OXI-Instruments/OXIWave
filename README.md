@@ -6,7 +6,7 @@ Original WaveEdit, then adapted to SphereEdit, was written by Andrew Belt and ca
 
 OXI Wave allows you to create and edit 3D wavetables suitable for the wavetable engine of our CORAL Eurorack synthesizer.
 
-### Building
+### Building MAC & Linux
 
 Make dependencies with
 
@@ -29,3 +29,7 @@ Launch the program.
 You can even try your luck with building the polished distributable. Although this method is unsupported, it may work with some tweaks to the Makefile.
 
 	make dist
+
+### Building Windows
+
+Check [WINDOWS.md](./WINDOWS.md)

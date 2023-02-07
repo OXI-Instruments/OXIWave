@@ -552,11 +552,11 @@ void renderPreview() {
 		ImGui::PushItemWidth(-1.0);
 		float width = ImGui::CalcItemWidth() / 4.0 - ImGui::GetStyle().FramePadding.y;
 		ImGui::PushItemWidth(width);
-		ImGui::SliderFloat("##Depth", &morphX, 0.0, BANK_GRID_DIM1, "Depth: %.3f");
+		ImGui::SliderFloat("##X", &morphX, 0.0, BANK_GRID_DIM1, "X: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Latitude", &morphY, 0.0, BANK_GRID_DIM2, "Latitude: %.3f");
+		ImGui::SliderFloat("##Y", &morphY, 0.0, BANK_GRID_DIM2, "Y: %.3f");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##Longitude", &morphZ, 0.0, BANK_GRID_DIM3, "Longitude: %.3f");
+		ImGui::SliderFloat("##Z", &morphZ, 0.0, BANK_GRID_DIM3, "Z: %.3f");
 		ImGui::SameLine();
 		ImGui::SliderFloat("##Keyboard step size", &morph_step_size, 0.001, 1.0, "Keyboard Step Size: %.3f");
 	}
